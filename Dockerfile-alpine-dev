@@ -1,0 +1,30 @@
+FROM rust:1.77-alpine as builder
+
+RUN apk add --update-cache musl-dev pkgconfig libressl-dev
+
+WORKDIR /usr/src/
+
+# Cache dependencies build.
+RUN cargo new --bin app
+WORKDIR /usr/src/app
+COPY ./Cargo.lock ./Cargo.lock
+COPY ./Cargo.toml ./Cargo.toml
+# debug build for local docker build
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+  --mount=type=cache,target=/usr/src/app/target \
+  cargo build
+RUN rm src/*.rs
+
+COPY src ./src
+
+# debug build for local docker build
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+  --mount=type=cache,target=/usr/src/app/target \
+  cargo install --path . --debug
+
+
+FROM alpine:3.19
+COPY --from=builder /usr/local/cargo/bin/orgu /usr/local/bin/orgu
+
+ENTRYPOINT ["/usr/local/bin/orgu"]
+CMD ["front", "lambda"]

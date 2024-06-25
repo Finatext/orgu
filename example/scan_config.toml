@@ -1,0 +1,4 @@
+[[rules]]
+id = "test"
+description = "test rule"
+regex = '''secret_key = (.+)'''

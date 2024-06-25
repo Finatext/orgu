@@ -1,0 +1,230 @@
+name: CI/CD
+
+on:
+  # By default, a workflow only runs when a pull_request event's activity type is opened, synchronize, or reopened.
+  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
+  # So we add default event types and ready_for_review type here.
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+
+env:
+  RUST_BACKTRACE: full
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ci:
+    if: github.event.pull_request.draft == false
+    name: Run CI tasks
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9 # Latest
+        with:
+          toolchain: stable
+          components: rustfmt,clippy
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
+      - name: Check "cargo fmt"
+        run: cargo fmt -- --check
+      - name: Run "cargo check"
+        run: cargo check --locked --all-features --all-targets
+      - name: Run "cargo clippy"
+        run: cargo clippy --locked --all-features -- -D warnings
+      - name: Run "cargo test"
+        run: cargo test --locked --verbose --all-targets --all-features
+
+  crate-metadata:
+    if: startsWith(github.ref, 'refs/tags/v')
+    timeout-minutes: 5
+    name: Extract crate metadata
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - name: Extract crate information
+        id: crate-metadata
+        shell: bash
+        run: |
+          crate_version="$(cargo metadata --no-deps --format-version 1 | jq -r '"v" + .packages[0].version')"
+          if [ "${{ github.ref_name }}" != "${crate_version}" ]; then
+            echo "Tag does not match version in Cargo.toml: ${{ github.ref_name }} != ${crate_version}"
+            exit 1
+          fi
+          cargo metadata --no-deps --format-version 1 | jq -r '"name=" + .packages[0].name' | tee -a $GITHUB_OUTPUT
+          cargo metadata --no-deps --format-version 1 | jq -r '"version=" + .packages[0].version' | tee -a $GITHUB_OUTPUT
+          cargo metadata --no-deps --format-version 1 | jq -r '"msrv=" + .packages[0].rust_version' | tee -a $GITHUB_OUTPUT
+    outputs:
+      name: ${{ steps.crate-metadata.outputs.name }}
+      version: ${{ steps.crate-metadata.outputs.version }}
+      msrv: ${{ steps.crate-metadata.outputs.msrv }}
+
+  build-release:
+    name: Build and release binary
+    if: startsWith(github.ref, 'refs/tags/v')
+    timeout-minutes: 120
+    needs:
+      - ci
+      - crate-metadata
+    permissions:
+      contents: write
+    env:
+      BUILD_CMD: cargo
+    runs-on: ${{ matrix.job.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+        # To sort the matrix, use inline syntax.
+        - { target: aarch64-apple-darwin, os: macos-14 }
+        - { target: x86_64-apple-darwin, os: macos-13 }
+    steps:
+    - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9 # Latest
+      with:
+        toolchain: stable
+        targets: ${{ matrix.job.target }}
+    - if: ${{ contains(matrix.job.os, 'macos')}}
+      run: brew install openssl@3.0
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+    - name: Build release binary
+      run: $BUILD_CMD build --release --locked --verbose --target=${{ matrix.job.target }}
+    - name: Archive release binary
+      run: |
+        tar --create --gzip --verbose --file=${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz --directory=target/${{ matrix.job.target }}/release ${{ needs.crate-metadata.outputs.name }}
+    - name: Install coreutils for macOS runner
+      if: ${{ contains(matrix.job.os, 'macos')}}
+      run: brew install coreutils
+    - name: Calculate checksum
+      run: |
+        sha256sum ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz > ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz.sha256
+    - name: Upload release binary
+      uses: softprops/action-gh-release@a74c6b72af54cfa997e81df42d94703d6313a2d0 # v2.0.6
+      with:
+        files: |
+          ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz
+          ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz.sha256
+
+  # refs:
+  #   - https://docs.github.com/en/actions/publishing-packages/publishing-docker-images#publishing-images-to-github-packages
+  #   - https://github.com/docker/metadata-action#semver
+  build-release-docker:
+    name: Build and push Docker image and release binary
+    if: startsWith(github.ref, 'refs/tags/v')
+    timeout-minutes: 120
+    needs:
+      - crate-metadata
+      - ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository }}
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+        # To sort the matrix, use inline syntax.
+        - { target-os: alpine, target: x86_64-unknown-linux-musl }
+        - { target-os: ubuntu, target: x86_64-unknown-linux-gnu }
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - name: Log in to the Container registry
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Generates tags for alpine:
+      #   latest
+      #   latest-alpine
+      #   0.1
+      #   0.1-alpine
+      #   0.1.3
+      #   0.1.3-alpine
+      #
+      # For ubuntu:
+      #   0.1.3-ubuntu
+      #   0.1-ubuntu
+      #   latest-ubuntu
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            latest=false
+            suffix=-${{ matrix.job.target-os }},onlatest=true
+          tags: |
+            type=raw,value=latest,suffix=,enable=${{ matrix.job.target-os == 'alpine' }}
+            type=raw,value=latest
+            type=semver,pattern={{major}}.{{minor}},suffix=,enable=${{ matrix.job.target-os == 'alpine' }}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{version}},suffix=,enable=${{ matrix.job.target-os == 'alpine' }}
+            type=semver,pattern={{version}}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0 # v5.3.0
+        with:
+          context: .
+          file: Dockerfile-${{ matrix.job.target-os }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+      - name: Extract binary from Docker image
+        run: |
+          image_name="$(echo ${{ env.IMAGE_NAME }} | tr [:upper:] [:lower:])"
+          container_id="$(docker create "${{ env.REGISTRY }}/${image_name}:latest-${{ matrix.job.target-os }}")"
+          docker cp "${container_id}:/usr/local/bin/orgu" ./orgu
+          docker rm "${container_id}"
+      - name: Archive extracted binary
+        run: |
+          tar --create --gzip --verbose --file=${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz ${{ needs.crate-metadata.outputs.name }}
+      - name: Calculate checksum
+        run: |
+          sha256sum ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz > ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz.sha256
+      - name: Upload release binary
+        uses: softprops/action-gh-release@a74c6b72af54cfa997e81df42d94703d6313a2d0 # v2.0.6
+        with:
+          files: |
+            ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz
+            ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz.sha256
+
+  update-homebrew:
+    needs:
+      - build-release
+      - build-release-docker
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      with:
+        ref: main
+    - name: Update Homebrew Formula
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_REF: ${{ github.ref }}
+        TARGET: orgu
+      shell: bash
+      run: |
+        .github/scripts/update_formula
+    - name: Commit and push changes
+      shell: bash
+      run: |
+        set -x
+        # https://github.com/actions/checkout?tab=readme-ov-file#push-a-commit-using-the-built-in-token
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git diff
+        git add HomebrewFormula/orgu.rb
+        git commit -m "Update Homebrew formula"
+        git push

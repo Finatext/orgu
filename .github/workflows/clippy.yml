@@ -1,0 +1,20 @@
+name: clippy-action
+on: [pull_request]
+jobs:
+  clippy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9 # Latest as of 2023-11-16
+      with:
+        toolchain: stable
+        components: clippy
+    - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
+    - uses: giraffate/clippy-action@13b9d32482f25d29ead141b79e7e04e7900281e0 # v1.0.1
+      with:
+        reporter: 'github-pr-check'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
