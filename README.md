@@ -13,7 +13,9 @@ orgu offers a more cost-effective solution compared to GitHub Actions, particula
 Organization-wide workflows in GitHub are CI jobs that operate across all or selected repositories within an organization, based on repository attributes. These workflows are triggered by events such as pull requests or check suite events. Although reusable workflows can be employed, they still require the distribution of workflow files to each repository individually. In contrast, organization-wide workflows eliminate the need for such distribution, allowing specific CI jobs to be executed at the organization level without the need to configure each repository separately. This enables a more streamlined and efficient management of continuous integration tasks across multiple projects.
 
 ## Architecture
-![Architecture diagram](<docs/images/architecture.png>)
+![Architecture diagram](docs/images/architecture.png)
+
+![orgu-runner sequence diagram](docs/images/runner-sequence.png)
 
 orgu consists of two components:
 
