@@ -1,5 +1,5 @@
 # orgu
-**orgu** is a tool for implementing organization-wide workflows on GitHub. It is pronounced *[ˈoɾɡu]*.
+**orgu** is a tool for implementing organization-wide workflows on GitHub. It is pronounced *[ˈoɾɡu]*. [Blog post (ja)](https://techblog.finatext.com/orgu-e3a3ad0219a8).
 
 ## Why Choose orgu?
 
