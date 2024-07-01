@@ -27,7 +27,7 @@ jobs:
     timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
-      - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9 # Latest
+      - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # Latest
         with:
           toolchain: stable
           components: rustfmt,clippy
@@ -86,7 +86,7 @@ jobs:
         - { target: aarch64-apple-darwin, os: macos-14 }
         - { target: x86_64-apple-darwin, os: macos-13 }
     steps:
-    - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9 # Latest
+    - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # Latest
       with:
         toolchain: stable
         targets: ${{ matrix.job.target }}
@@ -138,7 +138,7 @@ jobs:
     steps:
       - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
       - name: Log in to the Container registry
-        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20 # v3.1.0
+        uses: docker/login-action@0d4c9c5ea7693da7b068278f7b52bda2a190a446 # v3.2.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -171,7 +171,7 @@ jobs:
             type=semver,pattern={{version}},suffix=,enable=${{ matrix.job.target-os == 'alpine' }}
             type=semver,pattern={{version}}
       - name: Build and push Docker image
-        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0 # v5.3.0
+        uses: docker/build-push-action@15560696de535e4014efeff63c48f16952e52dd1 # v6.2.0
         with:
           context: .
           file: Dockerfile-${{ matrix.job.target-os }}
