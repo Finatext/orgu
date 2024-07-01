@@ -13,6 +13,15 @@ updates:
       cargo-all:
         patterns:
           - "*"
+  - package-ecosystem: "docker"
+    directories:
+      - "/"
+      - "example"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "12:00"
+      timezone: "Asia/Tokyo"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
