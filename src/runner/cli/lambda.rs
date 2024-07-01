@@ -1,7 +1,7 @@
 use anyhow::bail;
 use aws_lambda_events::eventbridge::EventBridgeEvent;
 use clap::Args;
-use lambda_runtime::{run, service_fn, LambdaEvent};
+use lambda_runtime::{run, service_fn, Diagnostic, LambdaEvent};
 use tracing::error;
 
 use crate::{
@@ -27,6 +27,25 @@ pub struct LambdaArgs {
     handler_config: Config,
 }
 
+// From v0.12.0, lambda_runtime::run requires that error conversion.
+#[derive(Debug)]
+struct ServiceError(anyhow::Error);
+
+impl From<ServiceError> for Diagnostic<'_> {
+    fn from(val: ServiceError) -> Self {
+        Diagnostic {
+            error_type: "ServiceError".into(),
+            error_message: val.0.to_string().into(),
+        }
+    }
+}
+
+impl From<anyhow::Error> for ServiceError {
+    fn from(e: anyhow::Error) -> Self {
+        Self(e)
+    }
+}
+
 pub async fn lambda(cli: Cli, args: LambdaArgs) -> CommandResult {
     init_fmt_with_json(&cli.verbose);
 
@@ -38,7 +57,11 @@ pub async fn lambda(cli: Cli, args: LambdaArgs) -> CommandResult {
 
     let service = service_fn(|event: LambdaEvent<EventBridgeEvent<CheckRequest>>| {
         let h = &handler;
-        async move { h.handle_event(event.payload.detail).await }
+        async move {
+            h.handle_event(event.payload.detail)
+                .await
+                .map_err(Into::<ServiceError>::into)
+        }
     });
 
     // Use bail! because run returns unmachable type.
