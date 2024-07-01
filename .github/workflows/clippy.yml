@@ -9,7 +9,7 @@ jobs:
       pull-requests: write
     steps:
     - uses: actions/checkout@v4
-    - uses: dtolnay/rust-toolchain@dc6353516c68da0f06325f42ad880f76a5e77ec9 # Latest as of 2023-11-16
+    - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # Latest as of 2023-11-16
       with:
         toolchain: stable
         components: clippy
