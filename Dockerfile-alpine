@@ -1,6 +1,6 @@
 # Omit dependency build caching for release build.
 # Because we need clean build everty time for release build.
-FROM rust:1.77-alpine as builder
+FROM rust:1.79-alpine as builder
 
 RUN apk add --update-cache musl-dev pkgconfig libressl-dev
 
@@ -12,7 +12,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
   --mount=type=cache,target=/usr/src/app/target \
   cargo install --path .
 
-FROM alpine:3.19
+FROM alpine:3.20
 COPY --from=builder /usr/local/cargo/bin/orgu /usr/local/bin/orgu
 
 ENTRYPOINT ["/usr/local/bin/orgu"]
