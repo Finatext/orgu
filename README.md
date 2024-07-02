@@ -55,6 +55,12 @@ Download from GitHub release:
 
 https://github.com/Finatext/orgu/releases
 
+Cargo install:
+
+```
+cargo install --git https://github.com/Finatext/orgu.git
+```
+
 Build locally:
 
 ```
@@ -240,3 +246,12 @@ CLI uses: Use `-v` or `-vv` flag.
 
 ### Backtrace
 Use `RUST_BACKTRACE=1` to see backtrace.
+
+## Development
+### Release
+1. Update version of `Cargo.toml` and re-generate lock file
+1. Git commit-push then create a PR and merge
+1. Create a git tag with `git tag "$(cargo metadata --no-deps --format-version 1 | jq -r '"v" + .packages[0].version')"`
+1. Push the git tag and wait the CI creates a GitHub Release and upload artifacts
+1. Run `GITHUB_REF="refs/tags/$(cargo metadata --no-deps --format-version 1 | jq -r '"v" + .packages[0].version')" TARGET=orgu .github/scripts/update_formula` to update Homebrew formula file
+1. Create a PR and merge
