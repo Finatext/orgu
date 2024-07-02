@@ -196,35 +196,3 @@ jobs:
           files: |
             ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz
             ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz.sha256
-
-  update-homebrew:
-    needs:
-      - build-release
-      - build-release-docker
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      with:
-        ref: main
-    - name: Update Homebrew Formula
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GITHUB_REF: ${{ github.ref }}
-        TARGET: orgu
-      shell: bash
-      run: |
-        .github/scripts/update_formula
-    - name: Commit and push changes
-      shell: bash
-      run: |
-        set -x
-        # https://github.com/actions/checkout?tab=readme-ov-file#push-a-commit-using-the-built-in-token
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git diff
-        git add HomebrewFormula/orgu.rb
-        git commit -m "Update Homebrew formula"
-        git push
