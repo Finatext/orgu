@@ -55,6 +55,12 @@ Download from GitHub release:
 
 https://github.com/Finatext/orgu/releases
 
+Cargo install:
+
+```
+cargo install --git https://github.com/Finatext/orgu.git
+```
+
 Build locally:
 
 ```
