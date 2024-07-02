@@ -1,4 +1,4 @@
-FROM alpine:3.19
+FROM alpine:3.20
 COPY --from=ghcr.io/finatext/orgu:latest /usr/local/bin/orgu /usr/local/bin/orgu
 
 WORKDIR /usr/src/
