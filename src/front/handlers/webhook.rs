@@ -110,7 +110,7 @@ where
     // Creating checkrun can fail so ignore the error because it's not must-have.
     if let Err(e) = report_via_check_run(&state, &event, &repository, delivery_id, request_id).await
     {
-        warn!("failed to report via check_run API and safely ignored: {e}");
+        warn!(error = ?e, "failed to report via check_run API and safely ignored");
         return Ok((
             StatusCode::OK,
             "failed to report via check_run API and safely ignored".to_owned(),
