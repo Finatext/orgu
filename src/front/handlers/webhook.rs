@@ -3,7 +3,9 @@ use std::sync::Arc;
 use anyhow::{Context as _, Result};
 use axum::{extract::State, response::IntoResponse};
 use http::{HeaderMap, StatusCode};
-use octorust::types::{ChecksCreateRequest, ChecksCreateRequestConclusion, JobStatus};
+use octorust::types::{
+    ChecksCreateRequest, ChecksCreateRequestConclusion, ChecksUpdateRequestOutput, JobStatus,
+};
 use serde_json::from_str;
 use tracing::{field::Empty, info, instrument, warn, Span};
 
@@ -106,7 +108,8 @@ where
     state.event_bus_client.send(req).await?;
 
     // Creating checkrun can fail so ignore the error because it's not must-have.
-    if let Err(e) = report_via_check_run(&state, &event, &repository).await {
+    if let Err(e) = report_via_check_run(&state, &event, &repository, delivery_id, request_id).await
+    {
         warn!("failed to report via check_run API and safely ignored: {e}");
         return Ok((
             StatusCode::OK,
@@ -129,6 +132,8 @@ async fn report_via_check_run<EB: EventQueueClient, GH: GithubClient>(
     state: &AppState<EB, GH>,
     event: &GithubEvent,
     repository: &GithubRepository,
+    delivery_id: &str,
+    requiest_id: &str,
 ) -> Result<()> {
     let input = ChecksCreateRequest {
         name: CHECK_RUN_NAME.to_owned(),
@@ -136,11 +141,11 @@ async fn report_via_check_run<EB: EventQueueClient, GH: GithubClient>(
         status: Some(JobStatus::InProgress),
         conclusion: None,
         output: None,
-        actions: Vec::new(),
+        actions: Default::default(),
         completed_at: None,
         started_at: None,
-        details_url: String::new(),
-        external_id: String::new(),
+        details_url: Default::default(),
+        external_id: Default::default(),
     };
     let owner = &repository.owner.login;
     let repo = &repository.name;
@@ -152,6 +157,15 @@ async fn report_via_check_run<EB: EventQueueClient, GH: GithubClient>(
     let mut input = into_update_request(input);
     input.status = Some(JobStatus::Completed);
     input.conclusion = Some(ChecksCreateRequestConclusion::Success);
+    input.output = Some(ChecksUpdateRequestOutput {
+        title: "orgu-front queued".to_owned(),
+        summary: format!(
+            "Delivery ID (not unique for re-delivery): {delivery_id}\nRequest ID (unique for re-delivery): {requiest_id}"
+        ),
+        text: Default::default(),
+        annotations: Default::default(),
+        images: Default::default(),
+    });
 
     state
         .github_client
