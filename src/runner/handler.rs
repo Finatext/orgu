@@ -226,7 +226,7 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
         match f.await {
             Ok(_) => Ok(()),
             Err(e) => {
-                info!("updating check run with failure due to error: {e}");
+                info!(original = ?e, "updating check run as failure due to error");
                 self.client
                     .update_check_run(
                         input.owner(),

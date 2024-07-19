@@ -193,7 +193,7 @@ fn default_checks_update_request(base: &UpdateInputBase) -> ChecksUpdateRequest 
 
 fn with_debug_info(original: String, req: &CheckRequest) -> String {
     format!(
-      "{original}\n\nDelivery ID (not unique for re-delivery): `{}`, Request ID (unique for re-delivery): `{}`",
+      "{original}\n\nDelivery ID (not unique for re-delivery): `{}`\nRequest ID (unique for re-delivery): `{}`",
       req.delivery_id, req.request_id,
   )
 }
