@@ -220,9 +220,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-cloudwatchevents"
-version = "1.35.0"
+version = "1.36.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "beda53d6eca2ae4077f85f9bd73eefffe9790434e2e19c913ac0def6affd6e75"
+checksum = "fca23920cd62f74528c63fbf24019461f2ff992e49983e3afda053f628555542"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -242,9 +242,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-ssm"
-version = "1.39.0"
+version = "1.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8eb1cef7412b0c6b8fd095158b4ab7b81b8150b86251822e76fdf46f2adf9810"
+checksum = "98ad37321602a715d506727ad17dc7a2c21c9d33ad73f04cf27b209d54b6514e"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -1710,14 +1710,13 @@ dependencies = [
 
 [[package]]
 name = "mockall"
-version = "0.12.1"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43766c2b5203b10de348ffe19f7e54564b64f3d6018ff7648d1e2d6d3a0f0a48"
+checksum = "d4c28b3fb6d753d28c20e826cd46ee611fda1cf3cde03a443a974043247c065a"
 dependencies = [
  "cfg-if",
  "downcast",
  "fragile",
- "lazy_static",
  "mockall_derive",
  "predicates",
  "predicates-tree",
@@ -1725,9 +1724,9 @@ dependencies = [
 
 [[package]]
 name = "mockall_derive"
-version = "0.12.1"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af7cbce79ec385a1d4f54baa90a76401eb15d9cab93685f62e7e9f942aa00ae2"
+checksum = "341014e7f530314e9a1fdbc7400b244efea7122662c96bfa248c31da5bfb2020"
 dependencies = [
  "cfg-if",
  "proc-macro2",

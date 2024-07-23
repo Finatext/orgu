@@ -8,8 +8,8 @@ anyhow = "1.0.86"
 async-trait = "0.1.81"
 aws_lambda_events = "0.15"
 aws-config = { version = "1.1.9", features = ["behavior-version-latest"] }
-aws-sdk-cloudwatchevents = "1.18.0"
-aws-sdk-ssm = "1.20"
+aws-sdk-cloudwatchevents = "1.36.0"
+aws-sdk-ssm = "1.40"
 axum = "0.7.4"
 base64 = "0.22"
 chrono = "0.4.19"
@@ -48,7 +48,7 @@ uuid = "1.10.0"
 
 [dev-dependencies]
 pretty_assertions = "1.4"
-mockall = "0.12.1"
+mockall = "0.13.0"
 axum-test = "15.3.0"
 
 [lints.clippy]
