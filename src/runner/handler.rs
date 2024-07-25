@@ -205,7 +205,13 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
                     .unwrap_or_default(),
             )
             // Other useful env vars.
-            // PR or check_suite before and after sha.
+            .env("CI_DELIVERY_ID", req.delivery_id.clone())
+            .env("CI_REQUEST_ID", req.request_id.clone())
+            .env("CI_EVENT_NAME", req.event_name.clone())
+            .env("CI_EVENT_ACTION", req.action.clone())
+            .env("CI_HEAD", req.head_sha.clone())
+            .env("CI_BASE", req.base_sha.clone().unwrap_or_default())
+            .env("CI_BASE_REF", req.base_ref.clone().unwrap_or_default())
             .env("CI_BEFORE", req.before.clone().unwrap_or_default())
             .env("CI_AFTER", req.after.clone().unwrap_or_default());
         if let Ok(v) = env::var("PATH") {

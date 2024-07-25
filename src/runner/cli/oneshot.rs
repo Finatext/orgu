@@ -61,6 +61,8 @@ pub async fn oneshot(cli: Cli, args: OneshotArgs) -> CommandResult {
         event_name: "pull_request".to_owned(),
         action: "synchronize".to_owned(),
         head_sha: head_sha.clone(),
+        base_sha: None,
+        base_ref: None,
         before: None,
         after: Some(head_sha.clone()),
         pull_request_number: None,
