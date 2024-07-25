@@ -134,8 +134,7 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
         // https://docs.rs/tokio/latest/tokio/process/struct.Command.html#method.kill_on_drop
         cmd.kill_on_drop(true);
 
-        let task = cmd.output();
-        let out = match timeout(self.config.job_timeout.into(), task).await {
+        let out = match timeout(self.config.job_timeout.into(), cmd.output()).await {
             Ok(res) => res.with_context(|| format!("failed to run command: {}", fmt_cmd(&cmd)))?,
             Err(_) => {
                 info!(elapsed = ?start.elapsed(), timeout_config = %self.config.job_timeout, "command timed out");
