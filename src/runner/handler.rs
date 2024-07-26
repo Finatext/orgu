@@ -134,8 +134,7 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
         // https://docs.rs/tokio/latest/tokio/process/struct.Command.html#method.kill_on_drop
         cmd.kill_on_drop(true);
 
-        let task = cmd.output();
-        let out = match timeout(self.config.job_timeout.into(), task).await {
+        let out = match timeout(self.config.job_timeout.into(), cmd.output()).await {
             Ok(res) => res.with_context(|| format!("failed to run command: {}", fmt_cmd(&cmd)))?,
             Err(_) => {
                 info!(elapsed = ?start.elapsed(), timeout_config = %self.config.job_timeout, "command timed out");
@@ -206,7 +205,13 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
                     .unwrap_or_default(),
             )
             // Other useful env vars.
-            // PR or check_suite before and after sha.
+            .env("CI_DELIVERY_ID", req.delivery_id.clone())
+            .env("CI_REQUEST_ID", req.request_id.clone())
+            .env("CI_EVENT_NAME", req.event_name.clone())
+            .env("CI_EVENT_ACTION", req.action.clone())
+            .env("CI_HEAD", req.head_sha.clone())
+            .env("CI_BASE", req.base_sha.clone().unwrap_or_default())
+            .env("CI_BASE_REF", req.base_ref.clone().unwrap_or_default())
             .env("CI_BEFORE", req.before.clone().unwrap_or_default())
             .env("CI_AFTER", req.after.clone().unwrap_or_default());
         if let Ok(v) = env::var("PATH") {

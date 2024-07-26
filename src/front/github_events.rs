@@ -49,6 +49,8 @@ impl CheckSuiteEvent {
             action: self.common.action,
             repository: self.common.repository,
             head_sha: self.check_suite.head_sha,
+            base_sha: self.check_suite.before.clone(),
+            base_ref: None,
             before: self.check_suite.before,
             after: self.check_suite.after,
             // This is current design limitation: if multiple PRs are associated with a check suite, then retying checks
@@ -66,9 +68,11 @@ pub struct PullRequestEvent {
     pub common: WebhookCommonFields,
     /// The pull request number.
     pub number: u64,
-    // None for `opened` action.
+    // Base sha for `pull_requst.opened` events.
+    // Can be None for `check_suite` events.
     pub before: Option<String>,
-    // None for `opened` action.
+    // Head sha for `pull_requst.opened` event.
+    // Can be None for `check_suite` events.
     pub after: Option<String>,
     pub pull_request: PullRequest,
 }
@@ -78,7 +82,7 @@ impl PullRequestEvent {
         // In PR open event, before and after are not available, so insert them from the base and head.
         let before = self
             .before
-            .or_else(|| self.pull_request.base.clone().map(|b| b.sha));
+            .or_else(|| Some(self.pull_request.base.sha.clone()));
         let after = self
             .after
             .or_else(|| Some(self.pull_request.head.sha.clone()));
@@ -89,6 +93,8 @@ impl PullRequestEvent {
             action: self.common.action,
             repository: self.common.repository,
             head_sha: self.pull_request.head.sha,
+            base_sha: Some(self.pull_request.base.sha),
+            base_ref: Some(self.pull_request.base.ref_.clone()),
             before,
             after,
             pull_request_number: Some(self.number),
@@ -120,7 +126,7 @@ pub struct CheckSuitePullRequest {
 pub struct PullRequest {
     pub id: i64,
     pub head: Reference,
-    pub base: Option<Reference>,
+    pub base: Reference,
     pub draft: bool,
     pub title: String,
     pub user: User,

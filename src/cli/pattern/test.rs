@@ -140,6 +140,8 @@ fn example_check_request(args: TestArgs, custom_props: HashMap<String, String>) 
             custom_properties: custom_props,
         },
         head_sha: "a8619f1cf1f6ade02df413b18265f74d3bc9caca".to_owned(),
+        base_sha: None,
+        base_ref: None,
         before: None,
         after: Some("a8619f1cf1f6ade02df413b18265f74d3bc9caca".to_owned()),
         pull_request_number: pr_number,
