@@ -4,7 +4,7 @@ use clap::Args;
 use serde::Serialize;
 use serde_json::to_string_pretty;
 
-use crate::cli::{GlobalArgs, CommandResult, SUCCESS};
+use crate::cli::{CommandResult, GlobalArgs, SUCCESS};
 
 use super::{CustomPropsConfig, EventType};
 

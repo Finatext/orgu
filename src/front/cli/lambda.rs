@@ -3,7 +3,7 @@ use clap::Args;
 use lambda_http::run;
 
 use crate::{
-    cli::{GlobalArgs, CommandResult, SUCCESS},
+    cli::{CommandResult, GlobalArgs, SUCCESS},
     event_queue_client::{AwsEventBusClient, AwsEventBusConfig},
     front::{config::FrontConfig, routes::build_app},
     github_client::OctorustClient,

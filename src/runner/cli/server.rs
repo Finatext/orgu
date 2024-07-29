@@ -21,7 +21,7 @@ use tracing::{info, Level};
 use crate::{
     app_error::AppError,
     checkout::{CheckoutConfig, Libgit2Checkout},
-    cli::{GlobalArgs, CommandResult, SUCCESS},
+    cli::{CommandResult, GlobalArgs, SUCCESS},
     events::CheckRequest,
     github_client::OctorustClient,
     github_config::{GithubApiConfig, GithubAppConfig},

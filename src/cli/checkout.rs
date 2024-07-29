@@ -6,7 +6,7 @@ use tokio::fs::create_dir_all;
 
 use crate::{
     checkout::{Checkout as _, CheckoutConfig, CheckoutInput, Libgit2Checkout},
-    cli::{GlobalArgs, CommandResult, SUCCESS},
+    cli::{CommandResult, GlobalArgs, SUCCESS},
     github_client::OctorustClient,
     github_config::GithubApiConfig,
     trace::init_fmt_with_full,
