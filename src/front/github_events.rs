@@ -78,14 +78,28 @@ pub struct PullRequestEvent {
 }
 
 impl PullRequestEvent {
+    // GitHub webhooks send a zero SHA value in some cases, such as when creating a draft PR. For non-draft PRs, GitHub
+    // webhooks send a null SHA value. Although this behavior has been reported as a bug, GitHub has stated that it is
+    // expected behavior. This inconsistency increases the complexity of handling events, so orgu addresses this
+    // inconsistency. The zero SHA value is treated as a null SHA value, and thus, the zero SHA value is replaced with
+    // the base SHA value.
+    const ZERO_SHA_VALUE: &'static str = "0000000000000000000000000000000000000000";
+
+    // In PR open event, before and after are not available, so insert them from the base and head.
+    fn before(&self) -> Option<String> {
+        let before = self.before.clone().filter(|s| s != Self::ZERO_SHA_VALUE);
+        before.or_else(|| Some(self.pull_request.base.sha.clone()))
+    }
+
+    fn after(&self) -> Option<String> {
+        self.after
+            .clone()
+            .or_else(|| Some(self.pull_request.head.sha.clone()))
+    }
+
     fn into_check_request(self, req_id: String, delivery_id: String) -> CheckRequest {
-        // In PR open event, before and after are not available, so insert them from the base and head.
-        let before = self
-            .before
-            .or_else(|| Some(self.pull_request.base.sha.clone()));
-        let after = self
-            .after
-            .or_else(|| Some(self.pull_request.head.sha.clone()));
+        let before = self.before();
+        let after = self.after();
         CheckRequest {
             request_id: req_id,
             delivery_id,
@@ -141,4 +155,52 @@ pub struct Reference {
     #[serde(rename = "ref")]
     pub ref_: String,
     pub sha: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn pull_request_before_zero_value() {
+        let pr = PullRequestEvent {
+            before: Some("0000000000000000000000000000000000000000".to_owned()),
+            pull_request: PullRequest {
+                base: Reference {
+                    sha: "base_sha".to_owned(),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        assert_eq!(pr.before(), Some("base_sha".to_owned()));
+    }
+
+    #[test]
+    fn pull_request_before_null_value() {
+        let pr = PullRequestEvent {
+            before: None,
+            pull_request: PullRequest {
+                base: Reference {
+                    sha: "base_sha".to_owned(),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+        assert_eq!(pr.before(), Some("base_sha".to_owned()));
+    }
+
+    #[test]
+    fn pull_request_before_ok() {
+        let pr = PullRequestEvent {
+            before: Some("before_sha".to_owned()),
+            ..Default::default()
+        };
+        assert_eq!(pr.before(), Some("before_sha".to_owned()));
+    }
 }
