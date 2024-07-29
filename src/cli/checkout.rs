@@ -6,7 +6,7 @@ use tokio::fs::create_dir_all;
 
 use crate::{
     checkout::{Checkout as _, CheckoutConfig, CheckoutInput, Libgit2Checkout},
-    cli::{Cli, CommandResult, SUCCESS},
+    cli::{GlobalArgs, CommandResult, SUCCESS},
     github_client::OctorustClient,
     github_config::GithubApiConfig,
     trace::init_fmt_with_full,
@@ -34,8 +34,8 @@ pub struct CheckoutArgs {
     github_config: GithubApiConfig,
 }
 
-pub async fn checkout(cli: Cli, args: CheckoutArgs) -> CommandResult {
-    init_fmt_with_full(&cli.verbose);
+pub async fn checkout(global: GlobalArgs, args: CheckoutArgs) -> CommandResult {
+    init_fmt_with_full(&global.verbose);
 
     let under = match args.under {
         Some(p) => p,

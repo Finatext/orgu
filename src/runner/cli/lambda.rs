@@ -8,7 +8,7 @@ use tracing::error;
 
 use crate::{
     checkout::{CheckoutConfig, Libgit2Checkout},
-    cli::{Cli, CommandResult, FAILURE},
+    cli::{CommandResult, GlobalArgs, FAILURE},
     events::CheckRequest,
     github_client::OctorustClient,
     github_config::{GithubApiConfig, GithubAppConfig},
@@ -29,8 +29,8 @@ pub struct LambdaArgs {
     handler_config: Config,
 }
 
-pub async fn lambda(cli: Cli, args: LambdaArgs) -> CommandResult {
-    init_fmt_with_json(&cli.verbose);
+pub async fn lambda(global: GlobalArgs, args: LambdaArgs) -> CommandResult {
+    init_fmt_with_json(&global.verbose);
 
     let client = OctorustClient::new(args.github_config.clone(), args.github_app_config.clone())?;
     let checkout = Libgit2Checkout::new(args.checkout_config);

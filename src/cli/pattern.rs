@@ -5,7 +5,7 @@ use anyhow::{bail, Result};
 use clap::{Args, Subcommand, ValueEnum};
 use strum::Display;
 
-use crate::cli::{Cli, CommandResult};
+use crate::cli::{CommandResult, GlobalArgs};
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum PatternCommands {
@@ -15,10 +15,10 @@ pub enum PatternCommands {
     Generate(generate::GenerateArgs),
 }
 
-pub async fn run(cli: Cli, c: PatternCommands) -> CommandResult {
+pub async fn run(global: GlobalArgs, c: PatternCommands) -> CommandResult {
     match c {
-        PatternCommands::Test(args) => test::test(cli, args).await,
-        PatternCommands::Generate(args) => generate::generate(cli, args),
+        PatternCommands::Test(args) => test::test(global, args).await,
+        PatternCommands::Generate(args) => generate::generate(global, args),
     }
 }
 

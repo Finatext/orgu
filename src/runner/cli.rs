@@ -4,7 +4,7 @@ mod server;
 
 use clap::Subcommand;
 
-use crate::cli::{Cli, CommandResult};
+use crate::cli::{CommandResult, GlobalArgs};
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum RunnerCommands {
@@ -16,10 +16,10 @@ pub enum RunnerCommands {
     Lambda(lambda::LambdaArgs),
 }
 
-pub async fn run(cli: Cli, c: RunnerCommands) -> CommandResult {
+pub async fn run(global: GlobalArgs, c: RunnerCommands) -> CommandResult {
     match c {
-        RunnerCommands::Server(args) => server::server(cli, args).await,
-        RunnerCommands::Oneshot(args) => oneshot::oneshot(cli, args).await,
-        RunnerCommands::Lambda(args) => lambda::lambda(cli, args).await,
+        RunnerCommands::Server(args) => server::server(global, args).await,
+        RunnerCommands::Oneshot(args) => oneshot::oneshot(global, args).await,
+        RunnerCommands::Lambda(args) => lambda::lambda(global, args).await,
     }
 }

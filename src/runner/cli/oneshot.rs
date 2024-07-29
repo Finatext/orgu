@@ -2,7 +2,7 @@ use clap::Args;
 
 use crate::{
     checkout::{CheckoutConfig, Libgit2Checkout},
-    cli::{Cli, CommandResult, SUCCESS},
+    cli::{CommandResult, GlobalArgs, SUCCESS},
     events::{CheckRequest, User},
     github_client::{NullClient, OctorustClient},
     github_config::{GithubApiConfig, GithubAppConfig},
@@ -32,8 +32,8 @@ pub struct OneshotArgs {
     head_sha: Option<String>,
 }
 
-pub async fn oneshot(cli: Cli, args: OneshotArgs) -> CommandResult {
-    init_fmt_with_pretty(&cli.verbose);
+pub async fn oneshot(global: GlobalArgs, args: OneshotArgs) -> CommandResult {
+    init_fmt_with_pretty(&global.verbose);
 
     let checkout = Libgit2Checkout::new(args.checkout_config);
     let fetcher =

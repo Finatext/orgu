@@ -4,7 +4,7 @@ use clap::Args;
 use serde::Serialize;
 use serde_json::to_string_pretty;
 
-use crate::cli::{Cli, CommandResult, SUCCESS};
+use crate::cli::{GlobalArgs, CommandResult, SUCCESS};
 
 use super::{CustomPropsConfig, EventType};
 
@@ -47,7 +47,7 @@ impl DetailRepository {
     }
 }
 
-pub fn generate(_cli: Cli, args: GenerateArgs) -> CommandResult {
+pub fn generate(_global: GlobalArgs, args: GenerateArgs) -> CommandResult {
     let custom_properties = args
         .cps
         .custom_props
