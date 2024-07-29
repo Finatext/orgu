@@ -11,7 +11,7 @@ use tokio::{
 };
 
 use crate::{
-    cli::{Cli, CommandResult, FAILURE, SUCCESS},
+    cli::{CommandResult, GlobalArgs, FAILURE, SUCCESS},
     events::{CheckRequest, GithubRepository, User},
 };
 
@@ -44,7 +44,7 @@ pub struct TestArgs {
     sender: String,
 }
 
-pub async fn test(cli: Cli, args: TestArgs) -> CommandResult {
+pub async fn test(global: GlobalArgs, args: TestArgs) -> CommandResult {
     let custom_props = args.cps.custom_props.clone().into_iter().collect();
     let req = example_check_request(args.clone(), custom_props);
     let ev = example_eventbridge_event(req);
@@ -73,7 +73,7 @@ pub async fn test(cli: Cli, args: TestArgs) -> CommandResult {
         .await?;
 
     // Don't print and exits early.
-    if cli.verbose.is_silent() {
+    if global.verbose.is_silent() {
         if res.result {
             return SUCCESS;
         } else {

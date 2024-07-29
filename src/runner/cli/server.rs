@@ -21,7 +21,7 @@ use tracing::{info, Level};
 use crate::{
     app_error::AppError,
     checkout::{CheckoutConfig, Libgit2Checkout},
-    cli::{Cli, CommandResult, SUCCESS},
+    cli::{CommandResult, GlobalArgs, SUCCESS},
     events::CheckRequest,
     github_client::OctorustClient,
     github_config::{GithubApiConfig, GithubAppConfig},
@@ -76,8 +76,8 @@ struct AppState {
     selection: Selection,
 }
 
-pub async fn server(cli: Cli, args: ServerArgs) -> CommandResult {
-    init_fmt_with_pretty(&cli.verbose);
+pub async fn server(global: GlobalArgs, args: ServerArgs) -> CommandResult {
+    init_fmt_with_pretty(&global.verbose);
 
     let client = OctorustClient::new(args.github_config.clone(), args.github_app_config.clone())?;
     let checkout = Libgit2Checkout::new(args.checkout_config);

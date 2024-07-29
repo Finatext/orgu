@@ -3,7 +3,7 @@ use clap::Args;
 use lambda_http::run;
 
 use crate::{
-    cli::{Cli, CommandResult, SUCCESS},
+    cli::{CommandResult, GlobalArgs, SUCCESS},
     event_queue_client::{AwsEventBusClient, AwsEventBusConfig},
     front::{config::FrontConfig, routes::build_app},
     github_client::OctorustClient,
@@ -24,8 +24,8 @@ pub struct LambdaArgs {
 }
 
 #[allow(clippy::no_effect_underscore_binding)]
-pub async fn lambda(cli: Cli, args: LambdaArgs) -> CommandResult {
-    init_fmt_with_json(&cli.verbose);
+pub async fn lambda(global: GlobalArgs, args: LambdaArgs) -> CommandResult {
+    init_fmt_with_json(&global.verbose);
 
     let github_client = OctorustClient::new(args.github_config, args.github_app_config)?;
     let app = build_app(

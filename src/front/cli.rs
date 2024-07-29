@@ -3,7 +3,7 @@ mod server;
 
 use clap::Subcommand;
 
-use crate::cli::{Cli, CommandResult};
+use crate::cli::{CommandResult, GlobalArgs};
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum FrontCommands {
@@ -13,9 +13,9 @@ pub enum FrontCommands {
     Lambda(lambda::LambdaArgs),
 }
 
-pub async fn run(cli: Cli, c: FrontCommands) -> CommandResult {
+pub async fn run(global: GlobalArgs, c: FrontCommands) -> CommandResult {
     match c {
-        FrontCommands::Server(args) => server::server(cli, args).await,
-        FrontCommands::Lambda(args) => lambda::lambda(cli, args).await,
+        FrontCommands::Server(args) => server::server(global, args).await,
+        FrontCommands::Lambda(args) => lambda::lambda(global, args).await,
     }
 }

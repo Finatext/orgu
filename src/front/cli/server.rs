@@ -6,7 +6,7 @@ use tower_http::normalize_path::NormalizePath;
 use url::Url;
 
 use crate::{
-    cli::{Cli, CommandResult, SUCCESS},
+    cli::{CommandResult, GlobalArgs, SUCCESS},
     event_queue_client::{
         AwsEventBusClient, AwsEventBusConfig, EventQueueRelayClient, EventQueueRelayConfig,
     },
@@ -39,8 +39,8 @@ pub struct ServerArgs {
     event_bus_config: AwsEventBusConfig,
 }
 
-pub async fn server(cli: Cli, args: ServerArgs) -> CommandResult {
-    init_fmt_with_pretty(&cli.verbose);
+pub async fn server(global: GlobalArgs, args: ServerArgs) -> CommandResult {
+    init_fmt_with_pretty(&global.verbose);
 
     let github_client = OctorustClient::new(args.github_config, args.github_app_config)?;
 

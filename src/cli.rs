@@ -4,7 +4,7 @@ mod pattern;
 use std::process::ExitCode;
 
 use anyhow::Context;
-use clap::{Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 use clap_verbosity_flag::{InfoLevel, Verbosity};
 
 use crate::{front::cli as front, runner::cli as runner, ssmenv::with_replaced_env};
@@ -18,9 +18,15 @@ pub const FAILURE: CommandResult = Ok(ExitCode::FAILURE);
 #[allow(clippy::partial_pub_fields)] // To use global options.
 #[derive(Debug, Clone, Parser)]
 #[command(version, about, args_override_self(true))]
-pub struct Cli {
+struct Cli {
     #[command(subcommand)]
     command: Commands,
+    #[command(flatten)]
+    args: GlobalArgs,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct GlobalArgs {
     #[command(flatten)]
     pub verbose: Verbosity<InfoLevel>,
 }
@@ -48,13 +54,12 @@ pub async fn run() -> CommandResult {
     let cli = with_replaced_env(Cli::parse)
         .await
         .with_context(|| "fetching from AWS SSM failed")?;
-    let cli_clone = cli.clone();
     match cli.command {
         // Pass Cli to use global options. Is there a better way?
-        Commands::Front(c) => front::run(cli_clone, c).await,
-        Commands::Runner(c) => runner::run(cli_clone, c).await,
-        Commands::Pattern(c) => pattern::run(cli_clone, c).await,
-        Commands::Checkout(c) => checkout::checkout(cli_clone, c).await,
+        Commands::Front(c) => front::run(cli.args, c).await,
+        Commands::Runner(c) => runner::run(cli.args, c).await,
+        Commands::Pattern(c) => pattern::run(cli.args, c).await,
+        Commands::Checkout(c) => checkout::checkout(cli.args, c).await,
     }
 }
 
