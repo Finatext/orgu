@@ -9,11 +9,11 @@ async-trait = "0.1.81"
 aws_lambda_events = "0.15"
 aws-config = { version = "1.1.9", features = ["behavior-version-latest"] }
 aws-sdk-cloudwatchevents = "1.36.0"
-aws-sdk-ssm = "1.40"
+aws-sdk-ssm = "1.41"
 axum = "0.7.4"
 base64 = "0.22"
 chrono = "0.4.19"
-clap = { version = "4.5.11", features = ["derive", "env"] }
+clap = { version = "4.5.13", features = ["derive", "env"] }
 clap-verbosity-flag = "2.2.1"
 git2 = "0.19"
 hex = "0.4.3"
@@ -31,11 +31,11 @@ reqwest-middleware = "< 0.3"
 reqwest-retry = "= 0.4"
 retry-policies = "= 0.3"
 serde = "1.0.204"
-serde_json = "1.0.121"
+serde_json = "1.0.122"
 sha2 = "0.10.8"
 strum = { version = "0.26", features = ["derive"] }
 subtle = "2.6.1"
-tempfile = "3.10.1"
+tempfile = "3.11.0"
 thiserror = "1.0.62"
 tokio = { version = "1", features = ["macros", "process"] }
 tower = "0.4.13"
