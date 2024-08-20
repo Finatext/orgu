@@ -5,14 +5,16 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use http::HeaderName;
 use lambda_http::Context;
 use tower::{Layer, ServiceBuilder};
 use tower_http::{
     normalize_path::{NormalizePath, NormalizePathLayer},
-    request_id::{MakeRequestId, RequestId},
+    request_id::{MakeRequestId, PropagateRequestIdLayer, RequestId, SetRequestIdLayer},
+    sensitive_headers::SetSensitiveRequestHeadersLayer,
+    set_header::SetRequestHeaderLayer,
     timeout::TimeoutLayer,
     trace::{DefaultOnResponse, TraceLayer},
-    ServiceBuilderExt as _,
 };
 use tracing::{info_span, Level};
 use uuid::Uuid;
@@ -56,11 +58,16 @@ fn apply_middleware(router: Router, config: &FrontConfig) -> Router {
         .into_iter()
         .flat_map(str::parse)
         .chain([header::AUTHORIZATION, header::COOKIE])
-        .collect();
+        .collect::<Vec<_>>();
     let middleware = ServiceBuilder::new()
-        .sensitive_request_headers(headers)
-        .set_x_request_id(OrguReqeustIdMaker {})
-        .propagate_x_request_id()
+        .layer(SetSensitiveRequestHeadersLayer::new(headers))
+        .layer(SetRequestIdLayer::new(
+            HeaderName::from_static("x-request-id"),
+            OrguReqeustIdMaker {},
+        ))
+        .layer(PropagateRequestIdLayer::new(HeaderName::from_static(
+            "x-request-id",
+        )))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(|req: &Request<_>| {
@@ -76,10 +83,10 @@ fn apply_middleware(router: Router, config: &FrontConfig) -> Router {
                 })
                 .on_response(DefaultOnResponse::new().level(Level::INFO)),
         )
-        .insert_response_header_if_not_present(
+        .layer(SetRequestHeaderLayer::if_not_present(
             header::CONTENT_TYPE,
             HeaderValue::from_static("application/json"),
-        )
+        ))
         .layer(TimeoutLayer::new(config.server_timeout.into()));
 
     router.layer(middleware)
