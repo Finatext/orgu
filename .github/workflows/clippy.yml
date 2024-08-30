@@ -2,7 +2,9 @@ name: clippy-action
 on: [pull_request]
 jobs:
   clippy:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: large-github-hosted-runner-production
+      labels: large-github-hosted-runner-production-16cores
     timeout-minutes: 10
     permissions:
       contents: read
