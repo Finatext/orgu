@@ -16,15 +16,6 @@ class Orgu < Formula
         bin.install "orgu"
       end
     end
-
-    on_intel do
-      url "https://github.com/Finatext/orgu/releases/download/v0.1.3/orgu-x86_64-apple-darwin.tar.gz"
-      sha256 "15ef10b382e202541194f17b95d382be0aa1a47570116d9e7c1f3337c57baf8f"
-
-      def install
-        bin.install "orgu"
-      end
-    end
   end
 
   on_linux do
