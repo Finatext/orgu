@@ -147,9 +147,8 @@ impl UpdateInputBase {
     }
 
     fn to_text(&self, out: &Output) -> String {
-        let stdout = String::from_utf8_lossy(&out.stdout);
-        let stderr = String::from_utf8_lossy(&out.stderr);
-
+        let stdout = cut_text_length(&out.stdout);
+        let stderr = cut_text_length(&out.stderr);
         if self.wrap_stdout {
             format!(
                 "## stdout\n```\n{}\n```\n## stderr\n```\n{}\n```",
@@ -196,4 +195,16 @@ fn with_debug_info(original: String, req: &CheckRequest) -> String {
       "{original}\n\nDelivery ID (not unique for re-delivery): `{}`\nRequest ID (unique for re-delivery): `{}`",
       req.delivery_id, req.request_id,
   )
+}
+
+// GitHub API has a limit of 65535 characters for text fields. So cut the text if it's too long.
+// https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28#create-a-check-run
+const MAX_TEXT_LENGTH: usize = 30_000;
+fn cut_text_length(v: &[u8]) -> String {
+    let s = String::from_utf8_lossy(v);
+    if s.chars().count() > MAX_TEXT_LENGTH {
+        format!("{}...", s.chars().take(MAX_TEXT_LENGTH).collect::<String>())
+    } else {
+        s.to_string()
+    }
 }
