@@ -25,7 +25,9 @@ jobs:
     if: github.event.pull_request.draft == false
     name: Run CI tasks
     timeout-minutes: 20
-    runs-on: ubuntu-latest
+    runs-on:
+      group: large-github-hosted-runner-production
+      labels: large-github-hosted-runner-production-32cores
     steps:
       - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # Latest
         with:
@@ -77,14 +79,13 @@ jobs:
       contents: write
     env:
       BUILD_CMD: cargo
-    runs-on: ${{ matrix.job.os }}
+    runs-on: ${{ matrix.job.runner }}
     strategy:
       fail-fast: false
       matrix:
         job:
         # To sort the matrix, use inline syntax.
-        - { target: aarch64-apple-darwin, os: macos-14 }
-        - { target: x86_64-apple-darwin, os: macos-13 }
+        - { target: aarch64-apple-darwin, runner: macos-14-xlarge }
     steps:
     - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # Latest
       with:
@@ -99,7 +100,7 @@ jobs:
       run: |
         tar --create --gzip --verbose --file=${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz --directory=target/${{ matrix.job.target }}/release ${{ needs.crate-metadata.outputs.name }}
     - name: Install coreutils for macOS runner
-      if: ${{ contains(matrix.job.os, 'macos')}}
+      if: ${{ contains(matrix.job.runner, 'macos')}}
       run: brew install coreutils
     - name: Calculate checksum
       run: |
@@ -121,7 +122,9 @@ jobs:
     needs:
       - crate-metadata
       - ci
-    runs-on: ubuntu-latest
+    runs-on:
+      group: large-github-hosted-runner-production
+      labels: large-github-hosted-runner-production-64cores
     permissions:
       contents: write
       packages: write
