@@ -29,7 +29,7 @@ jobs:
       group: large-github-hosted-runner-production
       labels: large-github-hosted-runner-production-32cores
     steps:
-      - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # Latest
+      - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a # Latest
         with:
           toolchain: stable
           components: rustfmt,clippy
@@ -87,7 +87,7 @@ jobs:
         # To sort the matrix, use inline syntax.
         - { target: aarch64-apple-darwin, runner: macos-14-xlarge }
     steps:
-    - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17 # Latest
+    - uses: dtolnay/rust-toolchain@7b1c307e0dcbda6122208f10795a713336a9b35a # Latest
       with:
         toolchain: stable
         targets: ${{ matrix.job.target }}
@@ -174,7 +174,7 @@ jobs:
             type=semver,pattern={{version}},suffix=,enable=${{ matrix.job.target-os == 'alpine' }}
             type=semver,pattern={{version}}
       - name: Build and push Docker image
-        uses: docker/build-push-action@5176d81f87c23d6fc96624dfdbcd9f3830bbe445 # v6.5.0
+        uses: docker/build-push-action@5cd11c3a4ced054e52742c5fd54dca954e0edd85 # v6.7.0
         with:
           context: .
           file: Dockerfile-${{ matrix.job.target-os }}
