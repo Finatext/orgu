@@ -1,10 +1,10 @@
 # Omit dependency build caching for release build.
 # Because we need clean build everty time for release build.
-FROM rust:1.80-alpine as builder
+FROM rust:1.80-alpine AS builder
 
 RUN apk add --update-cache musl-dev pkgconfig libressl-dev
 
-WORKDIR /usr/src/
+WORKDIR /usr/src/app/
 
 COPY . .
 
