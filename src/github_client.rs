@@ -199,7 +199,7 @@ pub fn into_update_request(r: ChecksCreateRequest) -> ChecksUpdateRequest {
     }
 }
 
-pub fn empty_checkrun() -> CheckRun {
+pub const fn empty_checkrun() -> CheckRun {
     CheckRun {
         id: 0,
         head_sha: String::new(),
