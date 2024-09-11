@@ -19,7 +19,7 @@ impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let (status, code, message) = match &self {
             Self::InternalServerError(inner) => {
-                error!(errror = ?inner, "handler failed to process request");
+                error!(error = ?inner, "handler failed to process request");
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "internal_server_error",
