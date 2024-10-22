@@ -4,7 +4,7 @@ version = "0.1.4"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.89"
+anyhow = "1.0.90"
 async-trait = "0.1.83"
 aws_lambda_events = "0.15"
 aws-config = { version = "1.5.8", features = ["behavior-version-latest"] }
@@ -31,7 +31,7 @@ reqwest-middleware = "< 0.3"
 reqwest-retry = "= 0.4"
 retry-policies = "= 0.3"
 serde = "1.0.210"
-serde_json = "1.0.128"
+serde_json = "1.0.132"
 sha2 = "0.10.8"
 strum = { version = "0.26", features = ["derive"] }
 subtle = "2.6.1"
@@ -44,7 +44,7 @@ tracing = "0.1.40"
 tracing-log = "0.2.0"
 tracing-subscriber = { version = "0.3.18", features = ["json", "env-filter", "chrono"] }
 url = "2.5.2"
-uuid = "1.10.0"
+uuid = "1.11.0"
 
 [dev-dependencies]
 pretty_assertions = "1.4"
