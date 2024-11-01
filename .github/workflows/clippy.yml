@@ -15,7 +15,7 @@ jobs:
       with:
         toolchain: stable
         components: clippy
-    - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
+    - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
     - uses: giraffate/clippy-action@13b9d32482f25d29ead141b79e7e04e7900281e0 # v1.0.1
       with:
         reporter: 'github-pr-check'

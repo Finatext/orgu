@@ -34,7 +34,7 @@ jobs:
           toolchain: stable
           components: rustfmt,clippy
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84 # v2.7.3
+      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
       - name: Check "cargo fmt"
         run: cargo fmt -- --check
       - name: Run "cargo check"
@@ -106,7 +106,7 @@ jobs:
       run: |
         sha256sum ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz > ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz.sha256
     - name: Upload release binary
-      uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
+      uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v2.0.9
       with:
         files: |
           ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz
@@ -194,7 +194,7 @@ jobs:
         run: |
           sha256sum ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz > ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz.sha256
       - name: Upload release binary
-        uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8
+        uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v2.0.9
         with:
           files: |
             ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz
