@@ -4,12 +4,12 @@ version = "0.1.4"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.92"
+anyhow = "1.0.93"
 async-trait = "0.1.83"
 aws_lambda_events = "0.15"
-aws-config = { version = "1.5.9", features = ["behavior-version-latest"] }
-aws-sdk-cloudwatchevents = "1.48.0"
-aws-sdk-ssm = "1.53"
+aws-config = { version = "1.5.10", features = ["behavior-version-latest"] }
+aws-sdk-cloudwatchevents = "1.49.0"
+aws-sdk-ssm = "1.54"
 axum = "0.7.7"
 base64 = "0.22"
 chrono = "0.4.19"
@@ -30,13 +30,13 @@ reqwest = { version = "< 0.12", features = ["json"] } # 1.12 has breacking chang
 reqwest-middleware = "< 0.3"
 reqwest-retry = "= 0.4"
 retry-policies = "= 0.3"
-serde = "1.0.214"
+serde = "1.0.215"
 serde_json = "1.0.132"
 sha2 = "0.10.8"
 strum = { version = "0.26", features = ["derive"] }
 subtle = "2.6.1"
-tempfile = "3.13.0"
-thiserror = "1.0.68"
+tempfile = "3.14.0"
+thiserror = "2.0.3"
 tokio = { version = "1", features = ["macros", "process"] }
 tower = { version = "0.5.1", features = ["util"] }
 tower-http = { version = "0.6.1", features = ["sensitive-headers", "timeout", "trace", "sensitive-headers", "util", "set-header", "request-id", "normalize-path"] }
