@@ -1,6 +1,6 @@
 # Omit dependency build caching for release build.
 # Because we need clean build everty time for release build.
-FROM rust:1.82-alpine AS builder
+FROM rust:1.83-alpine AS builder
 
 RUN apk add --update-cache musl-dev pkgconfig libressl-dev
 
