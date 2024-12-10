@@ -4,21 +4,21 @@ version = "0.1.4"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.93"
+anyhow = "1.0.94"
 async-trait = "0.1.83"
 aws_lambda_events = "0.15"
 aws-config = { version = "1.5.10", features = ["behavior-version-latest"] }
-aws-sdk-cloudwatchevents = "1.49.0"
-aws-sdk-ssm = "1.55"
+aws-sdk-cloudwatchevents = "1.50.0"
+aws-sdk-ssm = "1.56"
 axum = "0.7.9"
 base64 = "0.22"
-chrono = "0.4.19"
-clap = { version = "4.5.21", features = ["derive", "env"] }
+chrono = "0.4.39"
+clap = { version = "4.5.23", features = ["derive", "env"] }
 clap-verbosity-flag = "3.0.1"
 git2 = "0.19"
 hex = "0.4.3"
 hmac = "0.12.1"
-http = "1.1.0"
+http = "1.2.0"
 humantime = "2.1.0"
 indoc = "2"
 jsonwebtoken = "9.3.0"
@@ -36,7 +36,7 @@ sha2 = "0.10.8"
 strum = { version = "0.26", features = ["derive"] }
 subtle = "2.6.1"
 tempfile = "3.14.0"
-thiserror = "2.0.3"
+thiserror = "2.0.6"
 tokio = { version = "1", features = ["macros", "process"] }
 tower = { version = "0.5.1", features = ["util"] }
 tower-http = { version = "0.6.2", features = ["sensitive-headers", "timeout", "trace", "sensitive-headers", "util", "set-header", "request-id", "normalize-path"] }
