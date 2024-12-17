@@ -1,8 +1,7 @@
 use anyhow::Result;
 use clap::{Args, ValueEnum};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
-use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
-use retry_policies::Jitter;
+use reqwest_retry::{policies::ExponentialBackoff, Jitter, RetryTransientMiddleware};
 
 #[derive(Debug, Args, Clone)]
 pub struct GithubAppConfig {
