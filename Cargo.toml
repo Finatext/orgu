@@ -4,12 +4,12 @@ version = "0.1.4"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.94"
+anyhow = "1.0.95"
 async-trait = "0.1.83"
 aws_lambda_events = "0.16"
-aws-config = { version = "1.5.10", features = ["behavior-version-latest"] }
-aws-sdk-cloudwatchevents = "1.50.0"
-aws-sdk-ssm = "1.56"
+aws-config = { version = "1.5.11", features = ["behavior-version-latest"] }
+aws-sdk-cloudwatchevents = "1.51.0"
+aws-sdk-ssm = "1.57"
 axum = "0.7.9"
 base64 = "0.22"
 chrono = "0.4.39"
@@ -31,12 +31,12 @@ reqwest-middleware = { version = "0", features = ["json"] }
 reqwest-retry = "0"
 retry-policies = "0"
 serde = "1.0.216"
-serde_json = "1.0.133"
+serde_json = "1.0.134"
 sha2 = "0.10.8"
 strum = { version = "0.26", features = ["derive"] }
 subtle = "2.6.1"
 tempfile = "3.14.0"
-thiserror = "2.0.7"
+thiserror = "2.0.9"
 tokio = { version = "1", features = ["macros", "process"] }
 tower = { version = "0.5.2", features = ["util"] }
 tower-http = { version = "0.6.2", features = ["sensitive-headers", "timeout", "trace", "sensitive-headers", "util", "set-header", "request-id", "normalize-path"] }
