@@ -29,12 +29,12 @@ jobs:
       group: large-github-hosted-runner-production
       labels: large-github-hosted-runner-production-32cores
     steps:
-      - uses: dtolnay/rust-toolchain@315e265cd78dad1e1dcf3a5074f6d6c47029d5aa # Latest
+      - uses: dtolnay/rust-toolchain@c5a29ddb4d9d194e7c84ec8c3fba61b1c31fee8c # Latest
         with:
           toolchain: stable
           components: rustfmt,clippy
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: Swatinem/rust-cache@82a92a6e8fbeee089604da2575dc567ae9ddeaab # v2.7.5
+      - uses: Swatinem/rust-cache@f0deed1e0edfc6a9be95417288c0e1099b1eeec3 # v2.7.7
       - name: Check "cargo fmt"
         run: cargo fmt -- --check
       - name: Run "cargo check"
@@ -87,7 +87,7 @@ jobs:
         # To sort the matrix, use inline syntax.
         - { target: aarch64-apple-darwin, runner: macos-14-xlarge }
     steps:
-    - uses: dtolnay/rust-toolchain@315e265cd78dad1e1dcf3a5074f6d6c47029d5aa # Latest
+    - uses: dtolnay/rust-toolchain@c5a29ddb4d9d194e7c84ec8c3fba61b1c31fee8c # Latest
       with:
         toolchain: stable
         targets: ${{ matrix.job.target }}
@@ -106,7 +106,7 @@ jobs:
       run: |
         sha256sum ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz > ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz.sha256
     - name: Upload release binary
-      uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
+      uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
       with:
         files: |
           ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz
@@ -174,7 +174,7 @@ jobs:
             type=semver,pattern={{version}},suffix=,enable=${{ matrix.job.target-os == 'alpine' }}
             type=semver,pattern={{version}}
       - name: Build and push Docker image
-        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355 # v6.10.0
+        uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0
         with:
           context: .
           file: Dockerfile-${{ matrix.job.target-os }}
@@ -194,7 +194,7 @@ jobs:
         run: |
           sha256sum ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz > ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz.sha256
       - name: Upload release binary
-        uses: softprops/action-gh-release@01570a1f39cb168c169c802c3bceb9e93fb10974 # v2.1.0
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
         with:
           files: |
             ${{ needs.crate-metadata.outputs.name }}-${{ matrix.job.target }}.tar.gz
