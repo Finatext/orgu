@@ -7,13 +7,13 @@ RUN apk add --update-cache curl
 
 WORKDIR /tmp/download
 
-ENV VERSION=8.18.1-patch1
-ENV TARGET=linux_amd64
-# From https://github.com/taiki45/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_checksums.txt
-ENV SHA256_SUM=aed536718ac444b6727754ca2e34e243ec1aee8bce928975233709d57bc61387
+ENV VERSION=8.23.3
+ENV TARGET=linux_x64
+# From https://github.com/gitleaks/gitleaks/releases/
+ENV SHA256_SUM=73a35edc2285afd689e712b8e0ebad3f2eaf94b0d67cd6e1f0ec693ac751bb4a
 RUN curl --silent --show-error --fail --connect-timeout 3 --max-time 10 --retry 3 \
   --location --remote-name \
-  "https://github.com/taiki45/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_${TARGET}.tar.gz"
+  "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_${TARGET}.tar.gz"
 RUN echo "${SHA256_SUM} gitleaks_${VERSION}_${TARGET}.tar.gz" | sha256sum -c
 RUN tar --extract --gzip --file "gitleaks_${VERSION}_${TARGET}.tar.gz" --verbose
 RUN install gitleaks /usr/local/bin/gitleaks
