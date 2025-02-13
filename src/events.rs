@@ -27,6 +27,8 @@ pub struct CheckRequest {
     /// Pull request number if the event is associated with a pull request. check_suite events can be associated with
     /// multiple PRs and if so, this will be the first PR number.
     pub pull_request_number: Option<u64>,
+    /// Reference name of the head. Always available for pull_request events.
+    pub pull_request_head_ref: Option<String>,
     /// User who triggered the event.
     pub sender: User,
 }

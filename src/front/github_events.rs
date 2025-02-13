@@ -57,6 +57,11 @@ impl CheckSuiteEvent {
             // for specific PR may not be possible. This is rare case and pushing empty commit will be work-around for
             // that case.
             pull_request_number: self.check_suite.pull_requests.first().map(|pr| pr.number),
+            pull_request_head_ref: self
+                .check_suite
+                .pull_requests
+                .first()
+                .map(|pr| pr.head.ref_.clone()),
             sender: self.common.sender,
         }
     }
@@ -112,6 +117,7 @@ impl PullRequestEvent {
             before,
             after,
             pull_request_number: Some(self.number),
+            pull_request_head_ref: Some(self.pull_request.head.ref_.clone()),
             sender: self.common.sender,
         }
     }
@@ -133,6 +139,7 @@ pub struct CheckSuite {
 pub struct CheckSuitePullRequest {
     pub id: u64,
     pub number: u64,
+    pub head: Reference,
 }
 
 // https://docs.github.com/en/webhooks/webhook-events-and-payloads?actionType=synchronize#pull_request

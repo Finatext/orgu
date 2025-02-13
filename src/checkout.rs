@@ -97,6 +97,7 @@ impl Checkout for Libgit2Checkout {
         )
     )]
     async fn checkout_under(&self, input: &CheckoutInput, under: &Path) -> Result<()> {
+        // If no_fetch is enabled, skip fetching and just set remote in fetch_with_timeout().
         let repo =
             fetch_with_timeout(under.to_path_buf(), input.clone(), self.config.clone()).await?;
 

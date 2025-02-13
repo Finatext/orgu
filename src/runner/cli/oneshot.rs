@@ -66,6 +66,7 @@ pub async fn oneshot(global: GlobalArgs, args: OneshotArgs) -> CommandResult {
         before: None,
         after: Some(head_sha.clone()),
         pull_request_number: None,
+        pull_request_head_ref: None,
         repository: repo,
         sender: User {
             login: "octocat".to_owned(),
