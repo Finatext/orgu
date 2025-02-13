@@ -6,7 +6,7 @@ use tokio::{
     process::Command,
     time::{timeout, Instant},
 };
-use tracing::{error, info, info_span, instrument, Instrument};
+use tracing::{error, info, info_span, instrument, trace, Instrument};
 
 use crate::{
     checkout::{Checkout, CheckoutError, CheckoutInput},
@@ -158,6 +158,9 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
         } else {
             info!(status = out.status.to_string(), elapsed = ?start.elapsed(), "command failed");
         };
+        // For pretty logging newlines, don't use structured logging here.
+        trace!("stdout:\n{}", String::from_utf8_lossy(&out.stdout));
+        trace!("stderr:\n{}", String::from_utf8_lossy(&out.stderr));
 
         let input = if out.status.success() {
             update_input.clone().into_command_succeeded(cmd, &out)
