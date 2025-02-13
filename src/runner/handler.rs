@@ -213,6 +213,10 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
             .env("CI_EVENT_NAME", req.event_name.clone())
             .env("CI_EVENT_ACTION", req.action.clone())
             .env("CI_HEAD", req.head_sha.clone())
+            .env(
+                "CI_HEAD_REF",
+                req.pull_request_head_ref.clone().unwrap_or_default(),
+            )
             .env("CI_BASE", req.base_sha.clone().unwrap_or_default())
             .env("CI_BASE_REF", req.base_ref.clone().unwrap_or_default())
             .env("CI_BEFORE", req.before.clone().unwrap_or_default())
@@ -315,6 +319,7 @@ mod tests {
             action: "synchronize".to_owned(),
             head_sha: "testsha".to_owned(),
             pull_request_number: Some(55),
+            pull_request_head_ref: Some("test-branch".to_owned()),
             repository: GithubRepository {
                 full_name: "owner/repo".to_owned(),
                 name: "repo".to_owned(),
@@ -373,6 +378,7 @@ mod tests {
                 .summary
                 .starts_with("Command succeeded"));
             let text = &input.output.as_ref().unwrap().text;
+
             assert!(text.contains("GITHUB_TOKEN=test_token"));
 
             assert!(text.contains("REVIEWDOG_GITHUB_API_TOKEN=test_token"));
@@ -382,6 +388,9 @@ mod tests {
             assert!(text.contains("CI_REPO_OWNER=owner"));
             assert!(text.contains("CI_REPO_NAME=repo"));
             assert!(text.contains("CI_PULL_REQUEST=55"));
+
+            assert!(text.contains("CI_HEAD=testsha"));
+            assert!(text.contains("CI_HEAD_REF=test-branch"));
 
             assert!(text.contains("PATH="));
 

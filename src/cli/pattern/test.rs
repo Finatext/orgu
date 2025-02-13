@@ -145,6 +145,7 @@ fn example_check_request(args: TestArgs, custom_props: HashMap<String, String>) 
         before: None,
         after: Some("a8619f1cf1f6ade02df413b18265f74d3bc9caca".to_owned()),
         pull_request_number: pr_number,
+        pull_request_head_ref: Some("feature".to_owned()),
         sender: User { login: args.sender },
     }
 }
