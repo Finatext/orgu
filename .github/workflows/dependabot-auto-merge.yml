@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   dependabot:
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
     steps:

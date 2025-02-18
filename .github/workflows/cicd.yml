@@ -25,9 +25,7 @@ jobs:
     if: github.event.pull_request.draft == false
     name: Run CI tasks
     timeout-minutes: 20
-    runs-on:
-      group: large-github-hosted-runner-production
-      labels: large-github-hosted-runner-production-32cores
+    runs-on: ubuntu-latest-32core
     steps:
       - uses: dtolnay/rust-toolchain@c5a29ddb4d9d194e7c84ec8c3fba61b1c31fee8c # Latest
         with:
@@ -122,9 +120,7 @@ jobs:
     needs:
       - crate-metadata
       - ci
-    runs-on:
-      group: large-github-hosted-runner-production
-      labels: large-github-hosted-runner-production-64cores
+    runs-on: ubuntu-latest-64core
     permissions:
       contents: write
       packages: write
