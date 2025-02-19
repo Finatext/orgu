@@ -178,7 +178,9 @@ Repository permissions:
 
 Webhook event subscription:
 
-- Check run, Check suite, Pull request
+- Pull request
+
+Note: Necessary `check_suite` and `check_run` events are automatically sent to the Webhook endpoint without subscription.
 
 ### orgu-runner
 This is baseline and should be modify based on atual use cases.
@@ -187,6 +189,13 @@ Repository permissions:
 
 - R/W: Checks
 - R: Contents, Custom properties, Metadata, Pull requests
+
+Webhook event subscription:
+
+None, but set the same URL as orgu-front to enable the re-run checks feature.
+When a user clicks the "re-run" button in the Checks UI, GitHub sends `check_suite.rerequested` or `check_run.rerequested` events to the URL.
+
+For more details, see [docs/re-run.md](docs/re-run.md).
 
 ## Running orgu without AWS Lambda
 ### orgu-front server

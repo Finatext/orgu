@@ -99,7 +99,8 @@ where
         info!("skipping public repository");
         return Ok((StatusCode::OK, "Public repository, skipping".to_owned()));
     }
-    // Unless the event is check_suite.rerequested or check_run.rerequested, skip the event if the installation ID is different.
+    // Unless the event is check_suite.rerequested or check_run.rerequested, skip the event if the installation ID is
+    // different. See `docs/re-run.md` for more details.
     if !(event.action == "rerequested"
         && (event_name == "check_suite" || event_name == "check_run"))
         && event.installation.id != state.github_config.installation_id
