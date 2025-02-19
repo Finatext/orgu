@@ -65,8 +65,12 @@ impl Selection {
             Self::PullRequest => {
                 req.event_name == "pull_request"
                     || (req.event_name == "check_suite" && req.action == "rerequested")
+                    || (req.event_name == "check_run" && req.action == "rerequested")
             }
-            Self::CheckSuite => req.event_name == "check_suite",
+            Self::CheckSuite => {
+                req.event_name == "check_suite"
+                    || (req.event_name == "check_run" && req.action == "rerequested")
+            }
         }
     }
 }

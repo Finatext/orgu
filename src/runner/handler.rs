@@ -78,8 +78,9 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
 
     async fn do_handle_event(&self, req: CheckRequest) -> Result<()> {
         // To handle rerequested events, we need check installations. Most of the events are from orgu-front GitHub App.
-        // For check_suite rerequested events, we only accept events from the same installation.
-        if req.event_name == "check_suite"
+        // For check_suite and check_run rerequested events, we only accept events from the same installation.
+        if (req.action == "rerequested"
+            && (req.event_name == "check_suite" || req.event_name == "check_run"))
             && req.installation_id != self.github_config.installation_id
         {
             info!("skipping event from different installation");
