@@ -2,6 +2,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::events::{CheckRequest, GithubRepository, User};
 
+// GitHub webhooks send a zero SHA value in some cases, such as when creating a draft PR. For non-draft PRs, GitHub
+// webhooks send a null SHA value. Although this behavior has been reported as a bug, GitHub has stated that it is
+// expected behavior. This inconsistency increases the complexity of handling events, so orgu addresses this
+// inconsistency. The zero SHA value is treated as a null SHA value, and thus, the zero SHA value is replaced with
+// the base SHA value.
+const ZERO_SHA_VALUE: &str = "0000000000000000000000000000000000000000";
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct WebhookCommonFields {
     pub action: String,
@@ -41,7 +48,13 @@ pub struct CheckSuiteEvent {
 }
 
 impl CheckSuiteEvent {
+    // Current design limitation: if multiple PRs are associated with a check suite, re-running checks
+    // for the specific PR may not be possible. This is rare case and pushing empty commit will be work-around for
+    // that case.
     fn into_check_request(self, req_id: String, delivery_id: String) -> CheckRequest {
+        let first_pr = self.check_suite.pull_requests.first();
+        let before = self.before();
+
         CheckRequest {
             request_id: req_id,
             delivery_id,
@@ -50,20 +63,27 @@ impl CheckSuiteEvent {
             repository: self.common.repository,
             head_sha: self.check_suite.head_sha,
             base_sha: self.check_suite.before.clone(),
-            base_ref: None,
-            before: self.check_suite.before,
+            base_ref: first_pr.map(|pr| pr.base.ref_.clone()),
+            before,
             after: self.check_suite.after,
-            // This is current design limitation: if multiple PRs are associated with a check suite, then retying checks
-            // for specific PR may not be possible. This is rare case and pushing empty commit will be work-around for
-            // that case.
-            pull_request_number: self.check_suite.pull_requests.first().map(|pr| pr.number),
-            pull_request_head_ref: self
-                .check_suite
-                .pull_requests
-                .first()
-                .map(|pr| pr.head.ref_.clone()),
+            pull_request_number: first_pr.map(|pr| pr.number),
+            pull_request_head_ref: first_pr.map(|pr| pr.head.ref_.clone()),
             sender: self.common.sender,
         }
+    }
+
+    // If top level before is broken, then try to get it from the first PR.
+    fn before(&self) -> Option<String> {
+        self.check_suite
+            .before
+            .clone()
+            .filter(|s| s != ZERO_SHA_VALUE)
+            .or_else(|| {
+                self.check_suite
+                    .pull_requests
+                    .first()
+                    .map(|pr| pr.base.sha.clone())
+            })
     }
 }
 
@@ -83,16 +103,9 @@ pub struct PullRequestEvent {
 }
 
 impl PullRequestEvent {
-    // GitHub webhooks send a zero SHA value in some cases, such as when creating a draft PR. For non-draft PRs, GitHub
-    // webhooks send a null SHA value. Although this behavior has been reported as a bug, GitHub has stated that it is
-    // expected behavior. This inconsistency increases the complexity of handling events, so orgu addresses this
-    // inconsistency. The zero SHA value is treated as a null SHA value, and thus, the zero SHA value is replaced with
-    // the base SHA value.
-    const ZERO_SHA_VALUE: &'static str = "0000000000000000000000000000000000000000";
-
     // In PR open event, before and after are not available, so insert them from the base and head.
     fn before(&self) -> Option<String> {
-        let before = self.before.clone().filter(|s| s != Self::ZERO_SHA_VALUE);
+        let before = self.before.clone().filter(|s| s != ZERO_SHA_VALUE);
         before.or_else(|| Some(self.pull_request.base.sha.clone()))
     }
 
@@ -140,6 +153,7 @@ pub struct CheckSuitePullRequest {
     pub id: u64,
     pub number: u64,
     pub head: Reference,
+    pub base: Reference,
 }
 
 // https://docs.github.com/en/webhooks/webhook-events-and-payloads?actionType=synchronize#pull_request
