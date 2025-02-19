@@ -88,6 +88,7 @@ where
     Span::current().record("installation_id", event.installation.id);
     Span::current().record("owner", &event.repository.owner.login);
     Span::current().record("repo", &event.repository.name);
+
     if !supported_actions.contains(&event.action.as_ref()) {
         info!("action not supported");
         return Ok((
@@ -95,21 +96,25 @@ where
             format!("Unsupported event action, skipping: {}", event.action),
         ));
     }
+
     if !event.repository.private {
         info!("skipping public repository");
         return Ok((StatusCode::OK, "Public repository, skipping".to_owned()));
     }
-    // Unless the event is check_suite.rerequested or check_run.rerequested, skip the event if the installation ID is
-    // different. See `docs/re-run.md` for more details.
-    if !(event.action == "rerequested"
-        && (event_name == "check_suite" || event_name == "check_run"))
-        && event.installation.id != state.github_config.installation_id
-    {
-        info!("skipping different installation");
-        return Ok((
-            StatusCode::OK,
-            "Different installation, skipping".to_owned(),
-        ));
+
+    // See `docs/re-run.md` for more details.
+    match (event_name, event.action.as_str(), event.installation.id) {
+        // `rerequested` events are always accepted regardless of the installation ID.
+        ("check_suite", "rerequested", _) | ("check_run", "rerequested", _) => (),
+        // Other events are accepted only if the installation ID matches.
+        (_, _, installation_id) if installation_id == state.github_config.installation_id => (),
+        (_, _, _) => {
+            info!("skipping different installation");
+            return Ok((
+                StatusCode::OK,
+                "Different installation, skipping".to_owned(),
+            ));
+        }
     }
 
     let repository = event.repository;
