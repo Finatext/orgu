@@ -108,8 +108,12 @@ where
         ("check_suite", "rerequested", _) | ("check_run", "rerequested", _) => (),
         // Other events are accepted only if the installation ID matches.
         (_, _, installation_id) if installation_id == state.github_config.installation_id => (),
-        (_, _, _) => {
-            info!("skipping different installation");
+        (_, _, installation_id) => {
+            info!(
+                ours = state.github_config.installation_id,
+                theirs = installation_id,
+                "skipping different installation"
+            );
             return Ok((
                 StatusCode::OK,
                 "Different installation, skipping".to_owned(),

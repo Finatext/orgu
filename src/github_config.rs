@@ -90,7 +90,7 @@ mod test {
         fn default() -> Self {
             Self {
                 app_id: 1,
-                installation_id: 123,
+                installation_id: 0,
                 private_key: "test-private-key".to_owned(),
             }
         }
