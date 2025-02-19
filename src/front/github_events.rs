@@ -14,6 +14,7 @@ pub struct WebhookCommonFields {
     pub action: String,
     pub repository: GithubRepository,
     pub sender: User,
+    pub installation: Installation,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -58,6 +59,7 @@ impl CheckSuiteEvent {
         CheckRequest {
             request_id: req_id,
             delivery_id,
+            installation_id: self.common.installation.id,
             event_name: "check_suite".to_owned(),
             action: self.common.action,
             repository: self.common.repository,
@@ -121,6 +123,7 @@ impl PullRequestEvent {
         CheckRequest {
             request_id: req_id,
             delivery_id,
+            installation_id: self.common.installation.id,
             event_name: "pull_request".to_owned(),
             action: self.common.action,
             repository: self.common.repository,
@@ -176,6 +179,11 @@ pub struct Reference {
     #[serde(rename = "ref")]
     pub ref_: String,
     pub sha: String,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct Installation {
+    pub id: i64,
 }
 
 #[cfg(test)]

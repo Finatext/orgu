@@ -36,9 +36,10 @@ const SUPPORTED_EVENTS: &[(&str, &[&str])] = &[
     fields(
         delivery_id = Empty,
         event_name = Empty,
+        installation_id = Empty,
         action = Empty,
         owner = Empty,
-        repo = Empty
+        repo = Empty,
     )
 )]
 pub async fn webhook<EB, GH, V>(
@@ -81,6 +82,7 @@ where
         format!("failed to parse payload to common event type: event={event_name}, body:\n{body}")
     })?;
     Span::current().record("action", &event.action);
+    Span::current().record("installation_id", event.installation.id);
     Span::current().record("owner", &event.repository.owner.login);
     Span::current().record("repo", &event.repository.name);
     if !supported_actions.contains(&event.action.as_ref()) {
@@ -93,6 +95,16 @@ where
     if !event.repository.private {
         info!("skipping public repository");
         return Ok((StatusCode::OK, "Public repository, skipping".to_owned()));
+    }
+    // Unless the event is check_suite.rerequested, skip the event if the installation ID is different.
+    if !(event_name == "check_suite" && event.action == "rerequested")
+        && event.installation.id != state.github_config.installation_id
+    {
+        info!("skipping different installation");
+        return Ok((
+            StatusCode::OK,
+            "Different installation, skipping".to_owned(),
+        ));
     }
 
     let repository = event.repository;
@@ -185,7 +197,11 @@ mod tests {
 
     use crate::{
         event_queue_client::{EventQueueClient, MockEventQueueClient},
-        front::{config::FrontConfig, github_events::PullRequestEvent},
+        events::CheckRequest,
+        front::{
+            config::FrontConfig,
+            github_events::{CheckSuiteEvent, Installation, PullRequestEvent},
+        },
         github_client::{empty_checkrun, MockGithubClient},
         github_verifier::test::NullVerifier,
     };
@@ -204,6 +220,7 @@ mod tests {
             },
             event_bus_client: eb,
             github_client: gh,
+            github_config: Default::default(),
         })
     }
 
@@ -274,6 +291,65 @@ mod tests {
         let res = call(init_state_never(), headers, &payload).await?;
         res.assert_status_ok();
         res.assert_text("Unsupported event action, skipping: test");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn different_installation_id() -> Result<()> {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-github-event", "pull_request".parse().unwrap());
+        let payload = WebhookCommonFields {
+            action: "synchronize".to_owned(),
+            repository: GithubRepository {
+                private: true,
+                ..Default::default()
+            },
+            installation: Installation { id: 999 },
+            ..Default::default()
+        };
+        let res = call(init_state_never(), headers, &payload).await?;
+        res.assert_status_ok();
+        res.assert_text("Different installation, skipping");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn different_installation_id_with_check_suite_rerequested() -> Result<()> {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-github-event", "check_suite".parse().unwrap());
+        let payload = CheckSuiteEvent {
+            common: WebhookCommonFields {
+                action: "rerequested".to_owned(),
+                repository: GithubRepository {
+                    private: true,
+                    ..Default::default()
+                },
+                installation: Installation { id: 999 },
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let mut mock_event_bus_client = MockEventQueueClient::new();
+        mock_event_bus_client
+            .expect_send()
+            .withf(|req: &CheckRequest| req.action == "rerequested" && req.installation_id == 999)
+            .once()
+            .returning(|_| Ok(()));
+        let mut mock_github_client = MockGithubClient::new();
+        mock_github_client
+            .expect_create_check_run()
+            .once()
+            .returning(|_, _, _| Ok(empty_checkrun()));
+        mock_github_client
+            .expect_update_check_run()
+            .once()
+            .returning(|_, _, _, _| Ok(empty_checkrun()));
+        let state = init_state(mock_event_bus_client, mock_github_client);
+
+        let res = call(state, headers, &payload).await?;
+        res.assert_status_ok();
+        res.assert_text("ok");
         Ok(())
     }
 

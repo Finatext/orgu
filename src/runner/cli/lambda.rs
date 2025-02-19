@@ -36,7 +36,13 @@ pub async fn lambda(global: GlobalArgs, args: LambdaArgs) -> CommandResult {
     let checkout = Libgit2Checkout::new(args.checkout_config);
     let fetcher =
         DefaultTokenFetcher::new(args.github_config.clone(), args.github_app_config.clone())?;
-    let handler = Handler::new(args.handler_config, client, checkout, fetcher);
+    let handler = Handler::new(
+        args.handler_config,
+        args.github_app_config,
+        client,
+        checkout,
+        fetcher,
+    );
 
     let service = service_fn(|event: LambdaEvent<EventBridgeEvent<CheckRequest>>| {
         let h = &handler;

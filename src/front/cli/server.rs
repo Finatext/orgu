@@ -42,13 +42,14 @@ pub struct ServerArgs {
 pub async fn server(global: GlobalArgs, args: ServerArgs) -> CommandResult {
     init_fmt_with_pretty(&global.verbose);
 
-    let github_client = OctorustClient::new(args.github_config, args.github_app_config)?;
+    let github_client = OctorustClient::new(args.github_config, args.github_app_config.clone())?;
 
     let app = if args.use_aws_event_bus {
         build_app(
             args.config,
             AwsEventBusClient::new(args.event_bus_config).await,
             github_client,
+            args.github_app_config,
         )
     } else {
         let config = EventQueueRelayConfig {
@@ -58,6 +59,7 @@ pub async fn server(global: GlobalArgs, args: ServerArgs) -> CommandResult {
             args.config,
             EventQueueRelayClient::new(config),
             github_client,
+            args.github_app_config,
         )
     };
     let app = <NormalizePath<Router> as ServiceExt<Request<Body>>>::into_make_service(app);

@@ -81,3 +81,18 @@ pub fn reqwest_client(config: GithubApiConfig) -> Result<ClientWithMiddleware> {
         .with(RetryTransientMiddleware::new_with_policy(retry_policy))
         .build())
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    impl Default for GithubAppConfig {
+        fn default() -> Self {
+            Self {
+                app_id: 1,
+                installation_id: 123,
+                private_key: "test-private-key".to_owned(),
+            }
+        }
+    }
+}

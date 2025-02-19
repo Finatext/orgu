@@ -27,11 +27,12 @@ pub struct LambdaArgs {
 pub async fn lambda(global: GlobalArgs, args: LambdaArgs) -> CommandResult {
     init_fmt_with_json(&global.verbose);
 
-    let github_client = OctorustClient::new(args.github_config, args.github_app_config)?;
+    let github_client = OctorustClient::new(args.github_config, args.github_app_config.clone())?;
     let app = build_app(
         args.config,
         AwsEventBusClient::new(args.event_bus_config).await,
         github_client,
+        args.github_app_config,
     );
     if let Err(e) = run(app).await {
         bail!("failed to run lambda: {e}");
