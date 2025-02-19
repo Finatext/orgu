@@ -377,7 +377,8 @@ mod tests {
             .returning(|_, _, _, _| Ok(empty_checkrun()));
         let state = init_state(mock_event_bus_client, mock_github_client);
 
-        let res = call(state, headers, &payload).await?;
+        // Keep state alive to not drop mock objects. The mock expectation will be checked on dropping.
+        let res = call(Arc::clone(&state), headers, &payload).await?;
         res.assert_status_ok();
         res.assert_text("ok");
         Ok(())
@@ -433,7 +434,7 @@ mod tests {
             .returning(|_, _, _, _| Ok(empty_checkrun()));
         let state = init_state(mock_event_bus_client, mock_github_client);
 
-        let res = call(state, headers, &payload).await?;
+        let res = call(Arc::clone(&state), headers, &payload).await?;
         res.assert_status_ok();
         res.assert_text("ok");
         Ok(())
@@ -471,7 +472,7 @@ mod tests {
             .returning(|_, _, _, _| bail!("fail"));
         let state = init_state(mock_event_bus_client, mock_github_client);
 
-        let res = call(state, headers, &payload).await?;
+        let res = call(Arc::clone(&state), headers, &payload).await?;
         res.assert_status_ok();
         res.assert_text("failed to report via check_run API and safely ignored");
         Ok(())
