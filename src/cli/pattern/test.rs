@@ -130,6 +130,7 @@ fn example_check_request(args: TestArgs, custom_props: HashMap<String, String>) 
     CheckRequest {
         request_id: "45771944-d356-4540-a0b7-b6dff7637f8d".to_owned(),
         delivery_id: "dc3640c3-4bd0-4a6a-8923-b6f82c859797".to_owned(),
+        installation_id: 123456,
         event_name: args.name.to_string(),
         action: args.action.to_string(),
         repository: GithubRepository {

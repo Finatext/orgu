@@ -65,8 +65,7 @@ impl From<JitterConfig> for Jitter {
 pub fn reqwest_client(config: GithubApiConfig) -> Result<ClientWithMiddleware> {
     let http = reqwest::Client::builder()
         .connect_timeout(config.github_connect_timeout.into())
-        // XXX: update octorust to use latest reqwest-middleware then use read_timeout.
-        .timeout(config.github_read_timeout.into())
+        .read_timeout(config.github_read_timeout.into())
         .build()?;
     let retry_policy = ExponentialBackoff::builder()
         .jitter(config.github_retry_jitter.into())
@@ -80,4 +79,19 @@ pub fn reqwest_client(config: GithubApiConfig) -> Result<ClientWithMiddleware> {
     Ok(ClientBuilder::new(http)
         .with(RetryTransientMiddleware::new_with_policy(retry_policy))
         .build())
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    impl Default for GithubAppConfig {
+        fn default() -> Self {
+            Self {
+                app_id: 1,
+                installation_id: 0,
+                private_key: "test-private-key".to_owned(),
+            }
+        }
+    }
 }

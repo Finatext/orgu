@@ -38,7 +38,13 @@ pub async fn oneshot(global: GlobalArgs, args: OneshotArgs) -> CommandResult {
     let checkout = Libgit2Checkout::new(args.checkout_config);
     let fetcher =
         DefaultTokenFetcher::new(args.github_config.clone(), args.github_app_config.clone())?;
-    let handler = Handler::new(args.handler_config, NullClient, checkout, fetcher.clone());
+    let handler = Handler::new(
+        args.handler_config,
+        args.github_app_config.clone(),
+        NullClient,
+        checkout,
+        fetcher.clone(),
+    );
 
     let token = fetcher.fetch_token().await?;
     let github_client = OctorustClient::new_with_token(args.github_config, token.clone())?;
@@ -58,6 +64,7 @@ pub async fn oneshot(global: GlobalArgs, args: OneshotArgs) -> CommandResult {
     let req = CheckRequest {
         request_id: "oneshot".to_owned(),
         delivery_id: "oneshot".to_owned(),
+        installation_id: args.github_app_config.installation_id,
         event_name: "pull_request".to_owned(),
         action: "synchronize".to_owned(),
         head_sha: head_sha.clone(),

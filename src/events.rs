@@ -4,10 +4,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct CheckRequest {
-    // Request id is unique for each event including re-delivery.
+    /// Request id is unique for each event including re-delivery.
     pub request_id: String,
-    // Delivery id has same value for re-delivery.
+    /// Delivery id has same value for re-delivery.
     pub delivery_id: String,
+    /// Target GitHub App Installation ID for the event.
+    /// This is used to handle re-run requests for "check suite" or "check run".
+    pub installation_id: i64,
     /// Name of the event.
     pub event_name: String,
     /// Action of the event.

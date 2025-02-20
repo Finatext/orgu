@@ -65,8 +65,12 @@ impl Selection {
             Self::PullRequest => {
                 req.event_name == "pull_request"
                     || (req.event_name == "check_suite" && req.action == "rerequested")
+                    || (req.event_name == "check_run" && req.action == "rerequested")
             }
-            Self::CheckSuite => req.event_name == "check_suite",
+            Self::CheckSuite => {
+                req.event_name == "check_suite"
+                    || (req.event_name == "check_run" && req.action == "rerequested")
+            }
         }
     }
 }
@@ -83,7 +87,13 @@ pub async fn server(global: GlobalArgs, args: ServerArgs) -> CommandResult {
     let checkout = Libgit2Checkout::new(args.checkout_config);
     let fetcher =
         DefaultTokenFetcher::new(args.github_config.clone(), args.github_app_config.clone())?;
-    let handler = Handler::new(args.handler_config, client, checkout, fetcher);
+    let handler = Handler::new(
+        args.handler_config,
+        args.github_app_config,
+        client,
+        checkout,
+        fetcher,
+    );
     let app = build_app(handler, args.select);
 
     let listener = TcpListener::bind([args.address, args.port.to_string()].join(":")).await?;

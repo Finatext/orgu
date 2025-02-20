@@ -26,6 +26,7 @@ use crate::{
         handlers::{health_check, webhook, AppState},
     },
     github_client::GithubClient,
+    github_config::GithubAppConfig,
     github_verifier::DefaultVerifier,
 };
 
@@ -33,6 +34,7 @@ pub fn build_app<EB, GH>(
     config: FrontConfig,
     event_bus_client: EB,
     github_client: GH,
+    github_config: GithubAppConfig,
 ) -> NormalizePath<Router>
 where
     EB: EventQueueClient + 'static,
@@ -42,6 +44,7 @@ where
         config: config.clone(),
         event_bus_client,
         github_client,
+        github_config,
     });
 
     let router = Router::new()
@@ -129,6 +132,7 @@ mod tests {
             FrontConfig::default(),
             MockEventQueueClient::new(),
             NullClient,
+            GithubAppConfig::default(),
         )
     }
 

@@ -62,15 +62,20 @@ pub fn generate(_global: GlobalArgs, args: GenerateArgs) -> CommandResult {
             source,
             detail_type,
             detail: Detail {
-                // To response to "Re-run all checks", subscribe check_suite/rerequested event.
-                event_name: vec!["pull_request".to_owned(), "check_suite".to_owned()],
+                // To response to "Re-run all checks", don't filter out check_suite.rerequested and
+                // check_run.rerequested event.
+                event_name: vec![
+                    "pull_request".to_owned(),
+                    "check_suite".to_owned(),
+                    "check_run".to_owned(),
+                ],
                 action: vec![
                     // For pull_request event.
                     "opened".to_owned(),
                     "synchronize".to_owned(),
                     "reopened".to_owned(),
                     "ready_for_review".to_owned(),
-                    // For check_suite event.
+                    // For check_suite and check_run event.
                     "rerequested".to_owned(),
                 ],
                 repository: DetailRepository { custom_properties },
@@ -80,7 +85,7 @@ pub fn generate(_global: GlobalArgs, args: GenerateArgs) -> CommandResult {
             source,
             detail_type,
             detail: Detail {
-                event_name: vec!["check_suite".to_owned()],
+                event_name: vec!["check_suite".to_owned(), "check_run".to_owned()],
                 action: vec!["requested".to_owned(), "rerequested".to_owned()],
                 repository: DetailRepository { custom_properties },
             },

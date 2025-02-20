@@ -12,6 +12,7 @@ use crate::{
     checkout::{Checkout, CheckoutError, CheckoutInput},
     events::CheckRequest,
     github_client::GithubClient,
+    github_config::GithubAppConfig,
     github_token::TokenFetcher,
     runner::hanlder_view::{fmt_cmd, CreateInput, UpdateInputBase},
 };
@@ -36,17 +37,25 @@ pub struct Config {
 pub struct Handler<CL: GithubClient, CH: Checkout, F: TokenFetcher> {
     config: Config,
     runner_job_name: String,
+    github_config: GithubAppConfig,
     client: CL,
     checkout: CH,
     token_fetcher: F,
 }
 
 impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
-    pub fn new(config: Config, client: CL, checkout: CH, fetcher: F) -> Self {
+    pub fn new(
+        config: Config,
+        github_config: GithubAppConfig,
+        client: CL,
+        checkout: CH,
+        fetcher: F,
+    ) -> Self {
         let runner_job_name = format!("run-{}", config.job_name);
         Self {
             config,
             runner_job_name,
+            github_config,
             client,
             checkout,
             token_fetcher: fetcher,
@@ -58,6 +67,7 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
         fields(
             request_id = req.request_id,
             delivery_id = req.delivery_id,
+            installation_id = req.installation_id,
             owner = req.repository.owner.login, repo = req.repository.name,
             head_sha = req.head_sha, pull_request_number = req.pull_request_number.unwrap_or_default(),
         ),
@@ -67,6 +77,23 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
     }
 
     async fn do_handle_event(&self, req: CheckRequest) -> Result<()> {
+        // See `docs/re-run.md` for more details.
+        match (
+            req.event_name.as_str(),
+            req.action.as_str(),
+            req.installation_id,
+        ) {
+            // `rerequested` events are only accepted from the same installation ID.
+            ("check_suite", "rerequested", id) | ("check_run", "rerequested", id)
+                if id != self.github_config.installation_id =>
+            {
+                info!("skipping event from different installation");
+                return Ok(());
+            }
+            // Other events are accepted regardless of the installation ID.
+            (_, _, _) => {}
+        }
+
         let create_input = CreateInput {
             req: req.clone(),
             name: self.runner_job_name.clone(),
@@ -413,7 +440,13 @@ mod tests {
             command: vec!["env".to_owned()],
             ..Default::default()
         };
-        let handler = Handler::new(config, client, checkout, fetcher);
+        let handler = Handler::new(
+            config,
+            GithubAppConfig::default(),
+            client,
+            checkout,
+            fetcher,
+        );
 
         let mut req = build_checkrequest();
         let props = &mut req.repository.custom_properties;
@@ -455,7 +488,13 @@ mod tests {
             command: vec!["false".to_owned()],
             ..Default::default()
         };
-        let handler = Handler::new(config, client, checkout, fetcher);
+        let handler = Handler::new(
+            config,
+            GithubAppConfig::default(),
+            client,
+            checkout,
+            fetcher,
+        );
 
         let res = handler.handle_event(Default::default()).await;
         res.unwrap();
@@ -483,7 +522,13 @@ mod tests {
             command: Vec::new(),
             ..Default::default()
         };
-        let handler = Handler::new(config, client, checkout, fetcher);
+        let handler = Handler::new(
+            config,
+            GithubAppConfig::default(),
+            client,
+            checkout,
+            fetcher,
+        );
 
         let res = handler.handle_event(Default::default()).await;
         assert!(res.is_err());
@@ -522,10 +567,88 @@ mod tests {
             })
             .returning(|_, _, _, _| Ok(empty_checkrun()));
 
-        let handler = Handler::new(config(), client, checkout, fetcher);
+        let handler = Handler::new(
+            config(),
+            GithubAppConfig::default(),
+            client,
+            checkout,
+            fetcher,
+        );
 
         let res = handler.handle_event(Default::default()).await;
         // Checkout timeout is considered as success with reporting failure via Checks API.
+        res.unwrap();
+    }
+
+    // In normal cases, handler should handle GitHub events from front GitHub App.
+    #[tokio::test]
+    async fn different_installation_id() {
+        let mut fetcher = MockTokenFetcher::new();
+        fetcher
+            .expect_fetch_token()
+            .returning(|| Ok("test_token".to_owned()));
+        let mut client = MockGithubClient::new();
+        client
+            .expect_create_check_run()
+            .returning(|_, _, _| Ok(empty_checkrun()));
+        client
+            .expect_update_check_run()
+            .returning(|_, _, _, _| Ok(empty_checkrun()));
+        let mut checkout = MockCheckout::new();
+        checkout
+            .expect_create_dir_and_checkout()
+            .returning(|_| Ok(work_dir()));
+
+        let config = Config {
+            job_name: "test_job".to_owned(),
+            command: vec!["env".to_owned()],
+            ..Default::default()
+        };
+        let handler = Handler::new(
+            config,
+            GithubAppConfig {
+                installation_id: 123,
+                ..Default::default()
+            },
+            client,
+            checkout,
+            fetcher,
+        );
+
+        let req = build_checkrequest();
+        let res = handler.handle_event(req).await;
+        res.unwrap();
+    }
+
+    // check_suite.rerequested event should be handled if the installation_id is the same.
+    #[tokio::test]
+    async fn different_installation_id_with_check_suite_rerequested() {
+        // Handler should not call any GitHub API, just skip the event.
+        let fetcher = MockTokenFetcher::new();
+        let client = MockGithubClient::new();
+        let checkout = MockCheckout::new();
+
+        let config = Config {
+            job_name: "test_job".to_owned(),
+            command: vec!["env".to_owned()],
+            ..Default::default()
+        };
+        let handler = Handler::new(
+            config,
+            GithubAppConfig {
+                installation_id: 123,
+                ..Default::default()
+            },
+            client,
+            checkout,
+            fetcher,
+        );
+
+        let mut req = build_checkrequest();
+        req.installation_id = 456;
+        req.event_name = "check_suite".to_owned();
+        req.action = "rerequested".to_owned();
+        let res = handler.handle_event(req).await;
         res.unwrap();
     }
 }

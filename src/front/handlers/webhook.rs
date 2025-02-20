@@ -14,7 +14,9 @@ use crate::{
     event_queue_client::EventQueueClient,
     events::GithubRepository,
     front::{
-        github_events::{GithubEvent, WebhookCommonFields},
+        github_events::{
+            CheckRunEvent, CheckSuiteEvent, GithubEvent, PullRequestEvent, WebhookCommonFields,
+        },
         handlers::AppState,
     },
     github_client::{into_update_request, GithubClient},
@@ -25,6 +27,7 @@ const CHECK_RUN_NAME: &str = "orgu-trigger";
 const SUPPORTED_EVENTS: &[(&str, &[&str])] = &[
     ("ping", &[]),
     ("check_suite", &["requested", "rerequested"]),
+    ("check_run", &["rerequested"]),
     (
         "pull_request",
         &["opened", "synchronize", "reopened", "ready_for_review"],
@@ -36,9 +39,10 @@ const SUPPORTED_EVENTS: &[(&str, &[&str])] = &[
     fields(
         delivery_id = Empty,
         event_name = Empty,
+        installation_id = Empty,
         action = Empty,
         owner = Empty,
-        repo = Empty
+        repo = Empty,
     )
 )]
 pub async fn webhook<EB, GH, V>(
@@ -81,8 +85,10 @@ where
         format!("failed to parse payload to common event type: event={event_name}, body:\n{body}")
     })?;
     Span::current().record("action", &event.action);
+    Span::current().record("installation_id", event.installation.id);
     Span::current().record("owner", &event.repository.owner.login);
     Span::current().record("repo", &event.repository.name);
+
     if !supported_actions.contains(&event.action.as_ref()) {
         info!("action not supported");
         return Ok((
@@ -90,25 +96,55 @@ where
             format!("Unsupported event action, skipping: {}", event.action),
         ));
     }
+
     if !event.repository.private {
         info!("skipping public repository");
         return Ok((StatusCode::OK, "Public repository, skipping".to_owned()));
     }
 
+    // See `docs/re-run.md` for more details.
+    match (event_name, event.action.as_str(), event.installation.id) {
+        // `rerequested` events are always accepted regardless of the installation ID.
+        ("check_suite", "rerequested", _) | ("check_run", "rerequested", _) => (),
+        // Other events are accepted only if the installation ID matches.
+        (_, _, installation_id) if installation_id == state.github_config.installation_id => (),
+        (_, _, installation_id) => {
+            info!(
+                ours = state.github_config.installation_id,
+                theirs = installation_id,
+                "skipping different installation"
+            );
+            return Ok((
+                StatusCode::OK,
+                "Different installation, skipping".to_owned(),
+            ));
+        }
+    }
+
     let repository = event.repository;
-    let event = from_str::<GithubEvent>(&body).with_context(|| {
-        format!("failed to parse payload to concret event type: event={event_name}, body={body}")
-    })?;
+    // We must allocate objects for Future pinning problem.
+    let event: Box<dyn GithubEvent + Send + Sync> = match event_name {
+        "check_run" => Box::new(parse_as::<CheckRunEvent>("check_run", event_name, &body)?),
+        "check_suite" => Box::new(parse_as::<CheckSuiteEvent>(
+            "check_suite",
+            event_name,
+            &body,
+        )?),
+        "pull_request" => Box::new(parse_as::<PullRequestEvent>(
+            "pull_request",
+            event_name,
+            &body,
+        )?),
+        _ => return Err(anyhow::anyhow!("unsupported event type: {event_name}").into()),
+    };
 
     let request_id = get_header_str(&headers, "x-request-id")?;
-    let req = event
-        .clone()
-        .into_check_request(request_id.to_owned(), delivery_id.to_owned());
+    let req = event.build_check_request(request_id.to_owned(), delivery_id.to_owned());
     info!("publishing event");
     state.event_bus_client.send(req).await?;
 
     // Creating checkrun can fail so ignore the error because it's not must-have.
-    if let Err(e) = report_via_check_run(&state, &event, &repository, delivery_id, request_id).await
+    if let Err(e) = report_via_check_run(&state, event, &repository, delivery_id, request_id).await
     {
         warn!(error = ?e, "failed to report via check_run API and safely ignored");
         return Ok((
@@ -118,6 +154,16 @@ where
     }
 
     Ok((StatusCode::OK, "ok".to_owned()))
+}
+
+fn parse_as<T: for<'de> serde::Deserialize<'de>>(
+    event_as: &str,
+    event_name: &str,
+    body: &str,
+) -> Result<T> {
+    from_str::<T>(body).with_context(|| {
+        format!("failed to parse payload as {event_as} event: event={event_name}, body:\n{body}")
+    })
 }
 
 fn get_header_str<'hdr>(headers: &'hdr HeaderMap, key: &str) -> Result<&'hdr str> {
@@ -130,7 +176,7 @@ fn get_header_str<'hdr>(headers: &'hdr HeaderMap, key: &str) -> Result<&'hdr str
 
 async fn report_via_check_run<EB: EventQueueClient, GH: GithubClient>(
     state: &AppState<EB, GH>,
-    event: &GithubEvent,
+    event: Box<dyn GithubEvent + Send + Sync>,
     repository: &GithubRepository,
     delivery_id: &str,
     requiest_id: &str,
@@ -185,7 +231,11 @@ mod tests {
 
     use crate::{
         event_queue_client::{EventQueueClient, MockEventQueueClient},
-        front::{config::FrontConfig, github_events::PullRequestEvent},
+        events::CheckRequest,
+        front::{
+            config::FrontConfig,
+            github_events::{CheckSuiteEvent, Installation, PullRequestEvent},
+        },
         github_client::{empty_checkrun, MockGithubClient},
         github_verifier::test::NullVerifier,
     };
@@ -204,6 +254,7 @@ mod tests {
             },
             event_bus_client: eb,
             github_client: gh,
+            github_config: Default::default(),
         })
     }
 
@@ -278,6 +329,66 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn different_installation_id() -> Result<()> {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-github-event", "pull_request".parse().unwrap());
+        let payload = WebhookCommonFields {
+            action: "synchronize".to_owned(),
+            repository: GithubRepository {
+                private: true,
+                ..Default::default()
+            },
+            installation: Installation { id: 999 },
+            ..Default::default()
+        };
+        let res = call(init_state_never(), headers, &payload).await?;
+        res.assert_status_ok();
+        res.assert_text("Different installation, skipping");
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn different_installation_id_with_check_suite_rerequested() -> Result<()> {
+        let mut headers = HeaderMap::new();
+        headers.insert("x-github-event", "check_suite".parse().unwrap());
+        let payload = CheckSuiteEvent {
+            common: WebhookCommonFields {
+                action: "rerequested".to_owned(),
+                repository: GithubRepository {
+                    private: true,
+                    ..Default::default()
+                },
+                installation: Installation { id: 999 },
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let mut mock_event_bus_client = MockEventQueueClient::new();
+        mock_event_bus_client
+            .expect_send()
+            .withf(|req: &CheckRequest| req.action == "rerequested" && req.installation_id == 999)
+            .once()
+            .returning(|_| Ok(()));
+        let mut mock_github_client = MockGithubClient::new();
+        mock_github_client
+            .expect_create_check_run()
+            .once()
+            .returning(|_, _, _| Ok(empty_checkrun()));
+        mock_github_client
+            .expect_update_check_run()
+            .once()
+            .returning(|_, _, _, _| Ok(empty_checkrun()));
+        let state = init_state(mock_event_bus_client, mock_github_client);
+
+        // Keep state alive to not drop mock objects. The mock expectation will be checked on dropping.
+        let res = call(Arc::clone(&state), headers, &payload).await?;
+        res.assert_status_ok();
+        res.assert_text("ok");
+        Ok(())
+    }
+
+    #[tokio::test]
     async fn public_repository() -> Result<()> {
         let mut headers = HeaderMap::new();
         headers.insert("x-github-event", "pull_request".parse().unwrap());
@@ -327,7 +438,7 @@ mod tests {
             .returning(|_, _, _, _| Ok(empty_checkrun()));
         let state = init_state(mock_event_bus_client, mock_github_client);
 
-        let res = call(state, headers, &payload).await?;
+        let res = call(Arc::clone(&state), headers, &payload).await?;
         res.assert_status_ok();
         res.assert_text("ok");
         Ok(())
@@ -365,7 +476,7 @@ mod tests {
             .returning(|_, _, _, _| bail!("fail"));
         let state = init_state(mock_event_bus_client, mock_github_client);
 
-        let res = call(state, headers, &payload).await?;
+        let res = call(Arc::clone(&state), headers, &payload).await?;
         res.assert_status_ok();
         res.assert_text("failed to report via check_run API and safely ignored");
         Ok(())
