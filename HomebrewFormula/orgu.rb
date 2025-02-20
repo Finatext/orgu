@@ -4,13 +4,13 @@
 class Orgu < Formula
   desc "orgu is a tool for implementing organization-wide workflows on GitHub"
   homepage "https://github.com/Finatext/orgu"
-  version "0.2.1"
+  version "0.3.0"
   license "MIT"
 
   on_macos do
     on_arm do
-      url "https://github.com/Finatext/orgu/releases/download/v0.2.1/orgu-aarch64-apple-darwin.tar.gz"
-      sha256 "50f1b336b3da5b08d0e2d43df72508f970454bea208a0216ef5e82c5b2c23053"
+      url "https://github.com/Finatext/orgu/releases/download/v0.3.0/orgu-aarch64-apple-darwin.tar.gz"
+      sha256 "1a7b27596155234acae7a08c9086f97f500ef17fce9dd5b898e53ab422f6913f"
 
       def install
         bin.install "orgu"
@@ -20,8 +20,8 @@ class Orgu < Formula
 
   on_linux do
     on_intel do
-      url "https://github.com/Finatext/orgu/releases/download/v0.2.1/orgu-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "d8979c8c25aaab6a59b4653c9fe84d4203a68351860323d69092fa904f89a5f2"
+      url "https://github.com/Finatext/orgu/releases/download/v0.3.0/orgu-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "83b93b0197189cd652d970e0018ea43e36ca8b8009b2b46e2d9e897fb6352e7a"
 
       def install
         bin.install "orgu"
