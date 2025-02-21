@@ -3,12 +3,12 @@ use std::error::Error;
 use anyhow::bail;
 use aws_lambda_events::eventbridge::EventBridgeEvent;
 use clap::Args;
-use lambda_runtime::{run, service_fn, LambdaEvent};
+use lambda_runtime::{LambdaEvent, run, service_fn};
 use tracing::error;
 
 use crate::{
     checkout::{CheckoutConfig, Libgit2Checkout},
-    cli::{CommandResult, GlobalArgs, FAILURE},
+    cli::{CommandResult, FAILURE, GlobalArgs},
     events::CheckRequest,
     github_client::OctorustClient,
     github_config::{GithubApiConfig, GithubAppConfig},

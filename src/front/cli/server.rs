@@ -1,4 +1,4 @@
-use axum::{body::Body, serve, Router, ServiceExt};
+use axum::{Router, ServiceExt, body::Body, serve};
 use clap::Args;
 use http::Request;
 use tokio::net::TcpListener;

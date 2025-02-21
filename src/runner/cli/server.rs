@@ -1,22 +1,22 @@
 use std::{sync::Arc, time::Duration};
 
+use axum::{Json, serve};
 use axum::{
+    Router,
     extract::State,
     routing::{get, post},
-    Router,
 };
-use axum::{serve, Json};
 use clap::{Args, ValueEnum};
 use strum::Display;
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::{
+    LatencyUnit,
     normalize_path::NormalizePathLayer,
     timeout::TimeoutLayer,
     trace::{DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse, TraceLayer},
-    LatencyUnit,
 };
-use tracing::{info, Level};
+use tracing::{Level, info};
 
 use crate::{
     app_error::AppError,

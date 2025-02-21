@@ -1,7 +1,7 @@
 mod generate;
 mod test;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use clap::{Args, Subcommand, ValueEnum};
 use strum::Display;
 

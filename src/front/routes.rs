@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use axum::{
-    http::{header, HeaderValue, Request},
-    routing::{get, post},
     Router,
+    http::{HeaderValue, Request, header},
+    routing::{get, post},
 };
 use http::HeaderName;
 use lambda_http::Context;
@@ -16,14 +16,14 @@ use tower_http::{
     timeout::TimeoutLayer,
     trace::{DefaultOnResponse, TraceLayer},
 };
-use tracing::{info_span, Level};
+use tracing::{Level, info_span};
 use uuid::Uuid;
 
 use crate::{
     event_queue_client::EventQueueClient,
     front::{
         config::FrontConfig,
-        handlers::{health_check, webhook, AppState},
+        handlers::{AppState, health_check, webhook},
     },
     github_client::GithubClient,
     github_config::GithubAppConfig,
