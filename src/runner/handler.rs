@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env, future::Future, path::Path};
+use std::{future::Future, path::Path};
 
 use anyhow::{Context as _, Result};
 use clap::Args;
@@ -14,7 +14,10 @@ use crate::{
     github_client::GithubClient,
     github_config::GithubAppConfig,
     github_token::TokenFetcher,
-    runner::hanlder_view::{CreateInput, UpdateInputBase, fmt_cmd},
+    runner::{
+        hanlder_view::{CreateInput, UpdateInputBase, fmt_cmd},
+        job_env::{JobEnv, build_job_env},
+    },
 };
 
 #[derive(Debug, Clone, Args)]
@@ -107,7 +110,8 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
                 &create_input.clone().into(),
             )
             .await?;
-        let update_input = create_input.into_update_input(check_run.id, self.config.wrap_stdout);
+        let mut update_input =
+            create_input.into_update_input(check_run.id, self.config.wrap_stdout);
 
         self.ensure_updating_check_run(update_input.clone(), async move {
             let owner = &req.repository.owner.login;
@@ -142,7 +146,9 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
                 }
             };
 
-            let cmd = self.build_command(&cloned.path, &req, &token)?;
+            let job_env = build_job_env(&req, &token, &self.config.job_name);
+            update_input.job_env = Some(job_env.clone());
+            let cmd = self.build_command(&cloned.path, &job_env)?;
             let span =
                 info_span!("run command", command = fmt_cmd(&cmd), path = %cloned.path.display());
             self.run_command(cmd, update_input).instrument(span).await
@@ -206,7 +212,7 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
         Ok(())
     }
 
-    fn build_command(&self, work_dir: &Path, req: &CheckRequest, token: &str) -> Result<Command> {
+    fn build_command(&self, work_dir: &Path, job_env: &JobEnv) -> Result<Command> {
         let (program, args) = self
             .config
             .command
@@ -217,41 +223,11 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
         // https://docs.rs/tokio/latest/tokio/process/struct.Command.html#method.output
         //
         // Add reviewdog env vars: https://github.com/reviewdog/reviewdog?tab=readme-ov-file#jenkins-with-github-pull-request-builder-plugin
-        c.args(args)
-            .current_dir(work_dir)
-            .env_clear()
-            .env("GITHUB_TOKEN", token)
-            // Reviewdog env vars.
-            .env("REVIEWDOG_GITHUB_API_TOKEN", token)
-            .env("REVIEWDOG_SKIP_DOGHOUSE", "true")
-            .env("JOB_NAME", self.config.job_name.clone())
-            .env("CI_COMMIT", req.head_sha.clone())
-            .env("CI_REPO_OWNER", req.repository.owner.login.clone())
-            .env("CI_REPO_NAME", req.repository.name.clone())
-            .env(
-                "CI_PULL_REQUEST",
-                req.pull_request_number
-                    .map(|n| n.to_string())
-                    .unwrap_or_default(),
-            )
-            // Other useful env vars.
-            .env("CI_DELIVERY_ID", req.delivery_id.clone())
-            .env("CI_REQUEST_ID", req.request_id.clone())
-            .env("CI_EVENT_NAME", req.event_name.clone())
-            .env("CI_EVENT_ACTION", req.action.clone())
-            .env("CI_HEAD", req.head_sha.clone())
-            .env(
-                "CI_HEAD_REF",
-                req.pull_request_head_ref.clone().unwrap_or_default(),
-            )
-            .env("CI_BASE", req.base_sha.clone().unwrap_or_default())
-            .env("CI_BASE_REF", req.base_ref.clone().unwrap_or_default())
-            .env("CI_BEFORE", req.before.clone().unwrap_or_default())
-            .env("CI_AFTER", req.after.clone().unwrap_or_default());
-        if let Ok(v) = env::var("PATH") {
-            c.env("PATH", v);
+        c.args(args).current_dir(work_dir).env_clear();
+
+        for entry in job_env.iter() {
+            c.env(&entry.key, &entry.value);
         }
-        add_custom_props(&mut c, &req.repository.custom_properties);
 
         Ok(c)
     }
@@ -293,15 +269,6 @@ async fn with_event_logging(req: CheckRequest, f: impl Future<Output = Result<()
             error!(error = ?e, "event handling failed");
             Err(e)
         }
-    }
-}
-
-// Job can refer custom properties as env vars with `CUSTOM_PROP_` prefix with upcased key.
-// e.g. `CUSTOM_PROP_TEAM=t-ferris`.
-fn add_custom_props(c: &mut Command, custom_props: &HashMap<String, String>) {
-    for (k, v) in custom_props {
-        let upcased = k.to_uppercase();
-        c.env(format!("CUSTOM_PROP_{upcased}"), v);
     }
 }
 
