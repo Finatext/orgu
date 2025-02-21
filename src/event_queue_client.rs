@@ -1,9 +1,9 @@
 use std::str::from_utf8;
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use async_trait::async_trait;
 use aws_config::timeout::TimeoutConfigBuilder;
-use aws_sdk_cloudwatchevents::{types::PutEventsRequestEntry, Client as CwClient};
+use aws_sdk_cloudwatchevents::{Client as CwClient, types::PutEventsRequestEntry};
 use clap::Args;
 use reqwest::Client as HttpClient;
 use tracing::{info, instrument};

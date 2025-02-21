@@ -7,7 +7,7 @@ use octorust::types::{
     ChecksCreateRequest, ChecksCreateRequestConclusion, ChecksUpdateRequestOutput, JobStatus,
 };
 use serde_json::from_str;
-use tracing::{field::Empty, info, instrument, warn, Span};
+use tracing::{Span, field::Empty, info, instrument, warn};
 
 use crate::{
     app_error::AppError,
@@ -19,7 +19,7 @@ use crate::{
         },
         handlers::AppState,
     },
-    github_client::{into_update_request, GithubClient},
+    github_client::{GithubClient, into_update_request},
     github_verifier::GithubRequestVerifier,
 };
 
@@ -225,7 +225,7 @@ mod tests {
     use std::time::Duration;
 
     use anyhow::bail;
-    use axum::{routing::post, Router};
+    use axum::{Router, routing::post};
     use axum_test::{TestResponse, TestServer};
     use serde::Serialize;
 
@@ -236,7 +236,7 @@ mod tests {
             config::FrontConfig,
             github_events::{CheckSuiteEvent, Installation, PullRequestEvent},
         },
-        github_client::{empty_checkrun, MockGithubClient},
+        github_client::{MockGithubClient, empty_checkrun},
         github_verifier::test::NullVerifier,
     };
 

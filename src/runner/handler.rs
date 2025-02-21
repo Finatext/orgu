@@ -4,9 +4,9 @@ use anyhow::{Context as _, Result};
 use clap::Args;
 use tokio::{
     process::Command,
-    time::{timeout, Instant},
+    time::{Instant, timeout},
 };
-use tracing::{error, info, info_span, instrument, trace, Instrument};
+use tracing::{Instrument, error, info, info_span, instrument, trace};
 
 use crate::{
     checkout::{Checkout, CheckoutError, CheckoutInput},
@@ -14,7 +14,7 @@ use crate::{
     github_client::GithubClient,
     github_config::GithubAppConfig,
     github_token::TokenFetcher,
-    runner::hanlder_view::{fmt_cmd, CreateInput, UpdateInputBase},
+    runner::hanlder_view::{CreateInput, UpdateInputBase, fmt_cmd},
 };
 
 #[derive(Debug, Clone, Args)]
@@ -334,7 +334,7 @@ mod tests {
     use crate::{
         checkout::{MockCheckout, WorkDir},
         events::{GithubRepository, User},
-        github_client::{empty_checkrun, MockGithubClient},
+        github_client::{MockGithubClient, empty_checkrun},
         github_token::MockTokenFetcher,
     };
 
@@ -398,12 +398,14 @@ mod tests {
             .returning(|_| Ok(work_dir()));
 
         fn check_env(input: &ChecksUpdateRequest) {
-            assert!(input
-                .output
-                .as_ref()
-                .unwrap()
-                .summary
-                .starts_with("Command succeeded"));
+            assert!(
+                input
+                    .output
+                    .as_ref()
+                    .unwrap()
+                    .summary
+                    .starts_with("Command succeeded")
+            );
             let text = &input.output.as_ref().unwrap().text;
 
             assert!(text.contains("GITHUB_TOKEN=test_token"));

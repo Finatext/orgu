@@ -10,7 +10,7 @@ type ParameterName = String;
 type FullParameterName = String;
 type ParameterValue = String;
 
-// Should be called in main thread exclusively, because it reads/writes environment variables.
+// Should be called in main thread exclusively, because it writes environment variables.
 pub async fn with_replaced_env<T, F>(f: F) -> Result<T>
 where
     F: FnOnce() -> T,
@@ -35,14 +35,20 @@ where
             .get(trimmed)
             .map(ToOwned::to_owned)
             .with_context(|| format!("no value fetched for {trimmed}"))?;
-        env::set_var(k, value);
+        // SAFETY: In orgu, we only call this in single thread manner.
+        unsafe {
+            env::set_var(k, value);
+        }
     }
 
     let res = f();
 
     // Restore original env vars.
     for (k, v) in original.iter() {
-        env::set_var(k, v);
+        // SAFETY: In orgu, we only call this in single thread manner.
+        unsafe {
+            env::set_var(k, v);
+        }
     }
     Ok(res)
 }

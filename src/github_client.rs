@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use async_trait::async_trait;
 use octorust::auth::{Credentials, InstallationTokenGenerator, JWTCredentials};
 use octorust::checks::Checks;
@@ -11,7 +11,7 @@ use tracing::info;
 use url::Url;
 
 use crate::events::GithubRepository;
-use crate::github_config::{reqwest_client, GithubApiConfig, GithubAppConfig};
+use crate::github_config::{GithubApiConfig, GithubAppConfig, reqwest_client};
 
 #[allow(clippy::indexing_slicing)] // For automock.
 #[cfg_attr(test, mockall::automock)]

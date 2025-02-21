@@ -1,18 +1,18 @@
 use std::{
     path::{Path, PathBuf},
     sync::{
-        atomic::{AtomicBool, Ordering},
         Arc,
+        atomic::{AtomicBool, Ordering},
     },
 };
 
-use anyhow::{bail, Context as _, Result};
+use anyhow::{Context as _, Result, bail};
 use clap::Args;
 use git2::{ErrorClass, ErrorCode, FetchOptions, Oid, Progress, Repository};
 use tempfile::tempdir;
 use thiserror::Error;
 use tokio::{task::spawn_blocking, time::timeout};
-use tracing::{debug, info, info_span, instrument, trace, warn, Span};
+use tracing::{Span, debug, info, info_span, instrument, trace, warn};
 
 #[derive(Debug, Args, Clone)]
 pub struct CheckoutConfig {

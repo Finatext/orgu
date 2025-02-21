@@ -1,16 +1,16 @@
 // To filter aws sdk logs, see: https://docs.aws.amazon.com/sdk-for-rust/latest/dg/logging.html#logging-filtering
 
 use clap_verbosity_flag::{LogLevel, Verbosity};
-use tracing::{level_filters::LevelFilter, Level};
+use tracing::{Level, level_filters::LevelFilter};
 use tracing_log::AsTrace as _;
 use tracing_subscriber::{
+    EnvFilter,
     fmt::{
+        SubscriberBuilder,
         format::{DefaultFields, Format, Full},
         time::ChronoLocal,
-        SubscriberBuilder,
     },
     util::SubscriberInitExt,
-    EnvFilter,
 };
 
 pub fn init_fmt_with_json<L: LogLevel>(v: &Verbosity<L>) {

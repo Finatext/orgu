@@ -1,6 +1,6 @@
-use anyhow::{bail, Context as _, Result};
+use anyhow::{Context as _, Result, bail};
 use chrono::{Duration, Utc};
-use jsonwebtoken::{encode, Algorithm, EncodingKey, Header};
+use jsonwebtoken::{Algorithm, EncodingKey, Header, encode};
 use reqwest::{Method, Response, StatusCode};
 use reqwest_middleware::ClientWithMiddleware;
 use serde::{Deserialize, Serialize};
@@ -8,7 +8,7 @@ use serde_json::Value;
 use tracing::debug;
 use url::Url;
 
-use crate::github_config::{reqwest_client, GithubApiConfig, GithubAppConfig};
+use crate::github_config::{GithubApiConfig, GithubAppConfig, reqwest_client};
 
 #[derive(Debug, Serialize)]
 struct Claims {

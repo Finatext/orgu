@@ -11,7 +11,7 @@ use tokio::{
 };
 
 use crate::{
-    cli::{CommandResult, GlobalArgs, FAILURE, SUCCESS},
+    cli::{CommandResult, FAILURE, GlobalArgs, SUCCESS},
     events::{CheckRequest, GithubRepository, User},
 };
 
