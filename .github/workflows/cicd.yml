@@ -144,16 +144,16 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       # Generates tags for alpine:
       #   latest
-      #   latest-alpine
+      #   alpine
       #   0.1
       #   0.1-alpine
       #   0.1.3
       #   0.1.3-alpine
       #
       # For ubuntu:
-      #   0.1.3-ubuntu
+      #   ubuntu
       #   0.1-ubuntu
-      #   latest-ubuntu
+      #   0.1.3-ubuntu
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96 # v5.6.1
@@ -164,7 +164,7 @@ jobs:
             suffix=-${{ matrix.job.target-os }},onlatest=true
           tags: |
             type=raw,value=latest,suffix=,enable=${{ matrix.job.target-os == 'alpine' }}
-            type=raw,value=latest
+            type=raw,value=${{ matrix.job.target-os }},suffix=
             type=semver,pattern={{major}}.{{minor}},suffix=,enable=${{ matrix.job.target-os == 'alpine' }}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{version}},suffix=,enable=${{ matrix.job.target-os == 'alpine' }}
