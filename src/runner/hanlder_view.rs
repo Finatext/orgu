@@ -7,7 +7,7 @@ use octorust::types::{
 };
 use tokio::process::Command;
 
-use crate::events::CheckRequest;
+use crate::{events::CheckRequest, runner::job_env::JobEnv};
 
 #[derive(Debug, Clone)]
 pub struct CreateInput {
@@ -49,6 +49,7 @@ impl CreateInput {
             name: self.name,
             check_run_id,
             wrap_stdout,
+            job_env: None,
         }
     }
 }
@@ -59,6 +60,7 @@ pub struct UpdateInputBase {
     pub req: CheckRequest,
     pub name: String,
     pub wrap_stdout: bool,
+    pub job_env: Option<JobEnv>,
 }
 
 impl UpdateInputBase {
@@ -149,15 +151,36 @@ impl UpdateInputBase {
     fn to_text(&self, out: &Output) -> String {
         let stdout = cut_text_length(&out.stdout);
         let stderr = cut_text_length(&out.stderr);
-        if self.wrap_stdout {
+        let outs = if self.wrap_stdout {
             format!(
                 "## stdout\n```\n{}\n```\n## stderr\n```\n{}\n```",
                 stdout, stderr
             )
         } else {
             format!("## stdout\n{}\n## stderr\n{}", stdout, stderr)
+        };
+
+        match &self.job_env {
+            None => outs,
+            Some(e) => {
+                format!("## env\n```\n{}\n```\n{}", job_env_text(e), outs)
+            }
         }
     }
+}
+
+fn job_env_text(job_env: &JobEnv) -> String {
+    job_env
+        .iter()
+        .map(|e| {
+            if e.secret {
+                format!("{}: {}", e.key, "*".repeat(e.value.len()))
+            } else {
+                format!("{}: {}", e.key, e.value)
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 pub fn fmt_cmd(cmd: &Command) -> String {
