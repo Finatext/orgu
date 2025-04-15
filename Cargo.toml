@@ -4,7 +4,7 @@ version = "0.4.1"
 edition = "2024"
 
 [dependencies]
-anyhow = "1.0.97"
+anyhow = "1.0.98"
 async-trait = "0.1.88"
 aws_lambda_events = "0.16"
 aws-config = { version = "1.5.18", features = ["behavior-version-latest"] }
@@ -13,7 +13,7 @@ aws-sdk-ssm = "1.67"
 axum = "0.7.9"
 base64 = "0.22"
 chrono = "0.4.40"
-clap = { version = "4.5.35", features = ["derive", "env"] }
+clap = { version = "4.5.36", features = ["derive", "env"] }
 clap-verbosity-flag = "3.0.2"
 git2 = "0.20"
 hex = "0.4.3"
