@@ -13,7 +13,7 @@ aws-sdk-ssm = "1.67"
 axum = "0.7.9"
 base64 = "0.22"
 chrono = "0.4.41"
-clap = { version = "4.5.37", features = ["derive", "env"] }
+clap = { version = "4.5.38", features = ["derive", "env"] }
 clap-verbosity-flag = "3.0.2"
 git2 = "0.20"
 hex = "0.4.3"
@@ -35,11 +35,11 @@ serde_json = "1.0.140"
 sha2 = "0.10.9"
 strum = { version = "0.27", features = ["derive"] }
 subtle = "2.6.1"
-tempfile = "3.19.1"
+tempfile = "3.20.0"
 thiserror = "2.0.12"
 tokio = { version = "1", features = ["macros", "process"] }
 tower = { version = "0.5.2", features = ["util"] }
-tower-http = { version = "0.6.2", features = ["sensitive-headers", "timeout", "trace", "sensitive-headers", "util", "set-header", "request-id", "normalize-path"] }
+tower-http = { version = "0.6.4", features = ["sensitive-headers", "timeout", "trace", "sensitive-headers", "util", "set-header", "request-id", "normalize-path"] }
 tracing = "0.1.41"
 tracing-log = "0.2.0"
 tracing-subscriber = { version = "0.3.19", features = ["json", "env-filter", "chrono"] }
