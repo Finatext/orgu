@@ -160,6 +160,7 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
     // If the command fails to execute, it's likely due to a misconfiguration, and thus, an error is returned.
     // If the command executes but fails with an exit status, it's considered a domain failure, and thus, it's handled
     // as a normal outcome.
+    #[allow(clippy::cognitive_complexity)]
     async fn run_command(&self, mut cmd: Command, update_input: UpdateInputBase) -> Result<()> {
         info!("running command with timeout: {}", self.config.job_timeout);
         let start = Instant::now();
