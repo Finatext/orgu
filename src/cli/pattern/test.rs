@@ -51,7 +51,7 @@ pub async fn test(global: GlobalArgs, args: TestArgs) -> CommandResult {
     let event_json = to_string_pretty(&ev)?;
 
     if args.print_only {
-        println!("{}", event_json);
+        println!("{event_json}");
         return SUCCESS;
     }
 

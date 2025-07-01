@@ -143,8 +143,7 @@ impl GithubClient for OctorustClient {
             .await
             .with_context(|| {
                 format!(
-                    "failed to update check_run: owner={}, repo={}, id={}, ",
-                    owner, repo, check_run_id
+                    "failed to update check_run: owner={owner}, repo={repo}, id={check_run_id}, "
                 )
             })
             .map(|r| r.body)

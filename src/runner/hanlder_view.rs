@@ -142,7 +142,7 @@ impl UpdateInputBase {
                 &self.req,
             );
             // Use Debug trait here to include ancestor errors.
-            o.text = format!("Error:\n\n```\n{:?}\n```", error);
+            o.text = format!("Error:\n\n```\n{error:?}\n```");
             o
         });
         input
@@ -153,11 +153,10 @@ impl UpdateInputBase {
         let stderr = cut_text_length(&out.stderr);
         let outs = if self.wrap_stdout {
             format!(
-                "## stdout\n```\n{}\n```\n## stderr\n```\n{}\n```",
-                stdout, stderr
+                "## stdout\n```\n{stdout}\n```\n## stderr\n```\n{stderr}\n```"
             )
         } else {
-            format!("## stdout\n{}\n## stderr\n{}", stdout, stderr)
+            format!("## stdout\n{stdout}\n## stderr\n{stderr}")
         };
 
         match &self.job_env {
