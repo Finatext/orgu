@@ -13,7 +13,7 @@ aws-sdk-ssm = "1.67"
 axum = "0.7.9"
 base64 = "0.22"
 chrono = "0.4.41"
-clap = { version = "4.5.40", features = ["derive", "env"] }
+clap = { version = "4.5.41", features = ["derive", "env"] }
 clap-verbosity-flag = "3.0.3"
 git2 = "0.20"
 hex = "0.4.3"
