@@ -187,9 +187,10 @@ fn fetch(
     let cb = |progress: Progress| {
         if should_cancel.load(Ordering::Relaxed) {
             if let Ok(mut r) = repo.find_remote(REMOTE_NAME)
-                && let Err(e) = r.stop() {
-                    warn!("failed to stop remote: {}", e);
-                }
+                && let Err(e) = r.stop()
+            {
+                warn!("failed to stop remote: {}", e);
+            }
             false
         } else {
             show_remote_progress(progress)
