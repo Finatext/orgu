@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0.99"
-async-trait = "0.1.88"
+async-trait = "0.1.89"
 aws_lambda_events = "0.17"
 aws-config = { version = "1.5.18", features = ["behavior-version-latest"] }
 aws-sdk-cloudwatchevents = "1.61.0"
@@ -36,7 +36,7 @@ sha2 = "0.10.9"
 strum = { version = "0.27", features = ["derive"] }
 subtle = "2.6.1"
 tempfile = "3.20.0"
-thiserror = "2.0.14"
+thiserror = "2.0.15"
 tokio = { version = "1", features = ["macros", "process"] }
 tower = { version = "0.5.2", features = ["util"] }
 tower-http = { version = "0.6.6", features = ["sensitive-headers", "timeout", "trace", "sensitive-headers", "util", "set-header", "request-id", "normalize-path"] }
