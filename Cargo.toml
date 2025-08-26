@@ -14,7 +14,7 @@ axum = "0.7.9"
 base64 = "0.22"
 chrono = "0.4.41"
 clap = { version = "4.5.45", features = ["derive", "env"] }
-clap-verbosity-flag = "3.0.3"
+clap-verbosity-flag = "3.0.4"
 git2 = "0.20"
 hex = "0.4.3"
 hmac = "0.12.1"
@@ -31,19 +31,19 @@ reqwest-middleware = { version = "0", features = ["json"] }
 reqwest-retry = "0"
 retry-policies = "0"
 serde = "1.0.219"
-serde_json = "1.0.142"
+serde_json = "1.0.143"
 sha2 = "0.10.9"
 strum = { version = "0.27", features = ["derive"] }
 subtle = "2.6.1"
-tempfile = "3.20.0"
-thiserror = "2.0.15"
+tempfile = "3.21.0"
+thiserror = "2.0.16"
 tokio = { version = "1", features = ["macros", "process"] }
 tower = { version = "0.5.2", features = ["util"] }
 tower-http = { version = "0.6.6", features = ["sensitive-headers", "timeout", "trace", "sensitive-headers", "util", "set-header", "request-id", "normalize-path"] }
 tracing = "0.1.41"
 tracing-log = "0.2.0"
 tracing-subscriber = { version = "0.3.19", features = ["json", "env-filter", "chrono"] }
-url = "2.5.4"
+url = "2.5.7"
 uuid = "1.18.0"
 
 [dev-dependencies]
