@@ -4,7 +4,7 @@ version = "0.4.1"
 edition = "2024"
 
 [dependencies]
-anyhow = "1.0.99"
+anyhow = "1.0.100"
 async-trait = "0.1.89"
 aws_lambda_events = "0.18"
 aws-config = { version = "1.5.18", features = ["behavior-version-latest"] }
@@ -13,7 +13,7 @@ aws-sdk-ssm = "1.67"
 axum = "0.7.9"
 base64 = "0.22"
 chrono = "0.4.42"
-clap = { version = "4.5.47", features = ["derive", "env"] }
+clap = { version = "4.5.48", features = ["derive", "env"] }
 clap-verbosity-flag = "3.0.4"
 git2 = "0.20"
 hex = "0.4.3"
@@ -30,7 +30,7 @@ reqwest = { version = "0.12", features = ["json"] }
 reqwest-middleware = { version = "0", features = ["json"] }
 reqwest-retry = "0"
 retry-policies = "0"
-serde = "1.0.224"
+serde = "1.0.226"
 serde_json = "1.0.145"
 sha2 = "0.10.9"
 strum = { version = "0.27", features = ["derive"] }
