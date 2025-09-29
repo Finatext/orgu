@@ -14,7 +14,7 @@ pub struct Entry {
 pub fn build_job_env(req: &CheckRequest, token: &str, job_name: &str) -> JobEnv {
     let mut vars = vec![
         env("GITHUB_TOKEN", token, true),
-        // Reviewdog env vars.
+        // Reviewdog env vars. https://github.com/reviewdog/reviewdog?tab=readme-ov-file#jenkins-with-github-pull-request-builder-plugin
         env("REVIEWDOG_GITHUB_API_TOKEN", token, true),
         env("REVIEWDOG_SKIP_DOGHOUSE", "true", false),
         env("JOB_NAME", job_name, false),

@@ -222,8 +222,6 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
         let mut c = Command::new(program);
         // Default to pipe stdin etc. Not to be piped, use `wait_with_output` instead of `output`.
         // https://docs.rs/tokio/latest/tokio/process/struct.Command.html#method.output
-        //
-        // Add reviewdog env vars: https://github.com/reviewdog/reviewdog?tab=readme-ov-file#jenkins-with-github-pull-request-builder-plugin
         c.args(args).current_dir(work_dir).env_clear();
 
         for entry in job_env.iter() {
