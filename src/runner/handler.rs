@@ -151,7 +151,12 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
             let cmd = self.build_command(&cloned.path, &job_env)?;
             let span =
                 info_span!("run command", command = fmt_cmd(&cmd), path = %cloned.path.display());
-            self.run_command(cmd, update_input).instrument(span).await
+            let result = self.run_command(cmd, update_input).instrument(span).await;
+
+            // Explicitly cleanup before returning to ensure it happens before Lambda freeze.
+            cloned.cleanup()?;
+
+            result
         })
         .await
     }

@@ -63,6 +63,18 @@ pub struct WorkDir {
     pub _parent: tempfile::TempDir,
 }
 
+impl WorkDir {
+    /// Explicitly cleanup the temporary directory.
+    pub fn cleanup(self) -> Result<()> {
+        self._parent.close().with_context(|| {
+            format!(
+                "failed to cleanup temporary directory: {}",
+                self.path.display()
+            )
+        })
+    }
+}
+
 #[derive(Debug)]
 pub struct Libgit2Checkout {
     config: CheckoutConfig,
