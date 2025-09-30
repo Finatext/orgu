@@ -163,7 +163,12 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
 
             log_disk_usage("after job execution").await;
             // Explicitly cleanup before returning to ensure it happens before Lambda freeze.
-            cloned.cleanup()?;
+            // Temporary: Can skip cleanup with ORGU_NO_EXPLICITLY_CLEANUP env var to observe disk usage behavior.
+            if var("ORGU_NO_EXPLICITLY_CLEANUP").is_ok() {
+                info!("skipping explicit cleanup (NO_EXPLICITLY_CLEANUP is set)");
+            } else {
+                cloned.cleanup()?;
+            }
             log_disk_usage("after cleanup").await;
 
             result
