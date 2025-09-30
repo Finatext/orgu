@@ -1,4 +1,4 @@
-use std::{env, ffi::OsStr};
+use std::ffi::OsStr;
 
 use crate::events::CheckRequest;
 
@@ -14,7 +14,7 @@ pub struct Entry {
 pub fn build_job_env(req: &CheckRequest, token: &str, job_name: &str) -> JobEnv {
     let mut vars = vec![
         env("GITHUB_TOKEN", token, true),
-        // Reviewdog env vars.
+        // Reviewdog env vars. https://github.com/reviewdog/reviewdog?tab=readme-ov-file#jenkins-with-github-pull-request-builder-plugin
         env("REVIEWDOG_GITHUB_API_TOKEN", token, true),
         env("REVIEWDOG_SKIP_DOGHOUSE", "true", false),
         env("JOB_NAME", job_name, false),
@@ -48,10 +48,6 @@ pub fn build_job_env(req: &CheckRequest, token: &str, job_name: &str) -> JobEnv 
         env("CI_BEFORE", req.before.clone().unwrap_or_default(), false),
         env("CI_AFTER", req.after.clone().unwrap_or_default(), false),
     ];
-
-    if let Ok(v) = env::var("PATH") {
-        vars.push(env("PATH", v, false));
-    }
 
     // Job can refer custom properties as env vars with `CUSTOM_PROP_` prefix with upcased key.
     // e.g. `CUSTOM_PROP_TEAM=t-ferris`.

@@ -47,12 +47,4 @@ pub mod test {
             Ok(())
         }
     }
-
-    pub struct FailVerifier;
-
-    impl GithubRequestVerifier for FailVerifier {
-        fn verify_request(_headers: &HeaderMap, _body: &str, _secret: &str) -> Result<()> {
-            bail!("always failed")
-        }
-    }
 }

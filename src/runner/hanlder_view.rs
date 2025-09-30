@@ -160,7 +160,7 @@ impl UpdateInputBase {
         match &self.job_env {
             None => outs,
             Some(e) => {
-                format!("## env\n```\n{}\n```\n{}", job_env_text(e), outs)
+                format!("## job env\n```\n{}\n```\n{}", job_env_text(e), outs)
             }
         }
     }
