@@ -312,9 +312,15 @@ async fn log_disk_usage(label: &str) {
     let tmp_dir = temp_dir();
     match statvfs(&tmp_dir) {
         Ok(stat) => {
-            #[allow(clippy::useless_conversion, reason = "c_ulong is u64 on macOS but u32 on some Linux platforms")]
+            #[allow(
+                clippy::useless_conversion,
+                reason = "c_ulong is u64 on macOS but u32 on some Linux platforms"
+            )]
             let total = u64::from(stat.blocks()) * stat.fragment_size();
-            #[allow(clippy::useless_conversion, reason = "c_ulong is u64 on macOS but u32 on some Linux platforms")]
+            #[allow(
+                clippy::useless_conversion,
+                reason = "c_ulong is u64 on macOS but u32 on some Linux platforms"
+            )]
             let available = u64::from(stat.blocks_available()) * stat.fragment_size();
             let used = total - available;
 
