@@ -1,12 +1,17 @@
-use std::{future::Future, path::Path};
+use std::{
+    env::{temp_dir, var},
+    future::Future,
+    path::Path,
+};
 
 use anyhow::{Context as _, Result};
 use clap::Args;
+use nix::sys::statvfs::statvfs;
 use tokio::{
     process::Command,
     time::{Instant, timeout},
 };
-use tracing::{Instrument, error, info, info_span, instrument, trace};
+use tracing::{Instrument, error, info, info_span, instrument, trace, warn};
 
 use crate::{
     checkout::{Checkout, CheckoutError, CheckoutInput},
@@ -113,6 +118,8 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
         let mut update_input =
             create_input.into_update_input(check_run.id, self.config.wrap_stdout);
 
+        log_disk_usage("before job execution").await;
+
         self.ensure_updating_check_run(update_input.clone(), async move {
             let owner = &req.repository.owner.login;
             let repo = &req.repository.name;
@@ -148,10 +155,23 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
 
             let job_env = build_job_env(&req, &token, &self.config.job_name);
             update_input.job_env = Some(job_env.clone());
+
             let cmd = self.build_command(&cloned.path, &job_env)?;
             let span =
                 info_span!("run command", command = fmt_cmd(&cmd), path = %cloned.path.display());
-            self.run_command(cmd, update_input).instrument(span).await
+            let result = self.run_command(cmd, update_input).instrument(span).await;
+
+            log_disk_usage("after job execution").await;
+            // Explicitly cleanup before returning to ensure it happens before Lambda freeze.
+            // Temporary: Can skip cleanup with ORGU_NO_EXPLICITLY_CLEANUP env var to observe disk usage behavior.
+            if var("ORGU_NO_EXPLICITLY_CLEANUP").is_ok() {
+                info!("skipping explicit cleanup (NO_EXPLICITLY_CLEANUP is set)");
+            } else {
+                cloned.cleanup()?;
+            }
+            log_disk_usage("after cleanup").await;
+
+            result
         })
         .await
     }
@@ -254,6 +274,70 @@ impl<CL: GithubClient, CH: Checkout, F: TokenFetcher> Handler<CL, CH, F> {
                 // After successfully updating the check run, return the original error.
                 Err(e)
             }
+        }
+    }
+}
+
+// Format bytes to human-readable string (e.g., "1.5 TB", "512 GB").
+#[allow(
+    clippy::as_conversions,
+    reason = "u64 to f64 conversion is safe for display purposes, precision loss is acceptable"
+)]
+fn format_bytes(bytes: u64) -> String {
+    const KB: u64 = 1024;
+    const MB: u64 = KB * 1024;
+    const GB: u64 = MB * 1024;
+    const TB: u64 = GB * 1024;
+
+    if bytes >= TB {
+        format!("{:.2} TB", bytes as f64 / TB as f64)
+    } else if bytes >= GB {
+        format!("{:.2} GB", bytes as f64 / GB as f64)
+    } else if bytes >= MB {
+        format!("{:.2} MB", bytes as f64 / MB as f64)
+    } else if bytes >= KB {
+        format!("{:.2} KB", bytes as f64 / KB as f64)
+    } else {
+        format!("{} B", bytes)
+    }
+}
+
+// Log disk usage of tmp filesystem using statvfs.
+// Only runs when ORGU_LOG_DISK_USAGE environment variable is set.
+async fn log_disk_usage(label: &str) {
+    if var("ORGU_LOG_DISK_USAGE").is_err() {
+        return;
+    }
+
+    let tmp_dir = temp_dir();
+    match statvfs(&tmp_dir) {
+        Ok(stat) => {
+            #[allow(
+                clippy::useless_conversion,
+                reason = "c_ulong is u64 on macOS but u32 on some Linux platforms"
+            )]
+            let total = u64::from(stat.blocks()) * stat.fragment_size();
+            #[allow(
+                clippy::useless_conversion,
+                reason = "c_ulong is u64 on macOS but u32 on some Linux platforms"
+            )]
+            let available = u64::from(stat.blocks_available()) * stat.fragment_size();
+            let used = total - available;
+
+            info!(
+                label = label,
+                tmp_dir = %tmp_dir.display(),
+                total_bytes = total,
+                used_bytes = used,
+                available_bytes = available,
+                total = format_bytes(total),
+                used = format_bytes(used),
+                available = format_bytes(available),
+                "tmp filesystem disk usage"
+            );
+        }
+        Err(e) => {
+            warn!(label = label, tmp_dir = %tmp_dir.display(), error = %e, "failed to get filesystem stats");
         }
     }
 }
