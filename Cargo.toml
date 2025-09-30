@@ -39,7 +39,7 @@ tempfile = "3.23.0"
 thiserror = "2.0.17"
 tokio = { version = "1", features = ["macros", "process"] }
 tower = { version = "0.5.2", features = ["util"] }
-tower-http = { version = "0.6.6", features = ["sensitive-headers", "timeout", "trace", "sensitive-headers", "util", "set-header", "request-id", "normalize-path"] }
+tower-http = { version = "0.6.6", features = ["sensitive-headers", "timeout", "trace", "util", "set-header", "request-id", "normalize-path"] }
 tracing = "0.1.41"
 tracing-log = "0.2.0"
 tracing-subscriber = { version = "0.3.20", features = ["json", "env-filter", "chrono"] }
