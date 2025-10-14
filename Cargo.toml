@@ -13,7 +13,7 @@ aws-sdk-ssm = "1.67"
 axum = "0.7.9"
 base64 = "0.22"
 chrono = "0.4.42"
-clap = { version = "4.5.48", features = ["derive", "env"] }
+clap = { version = "4.5.49", features = ["derive", "env"] }
 clap-verbosity-flag = "3.0.4"
 git2 = "0.20"
 hex = "0.4.3"
@@ -25,7 +25,7 @@ jsonwebtoken = { version = "10", features = ["aws_lc_rs"] }
 lambda_http = "0.17"
 lambda_runtime = "0.14"
 octorust = "0.10.0"
-pem = "3.0.5"
+pem = "3.0.6"
 reqwest = { version = "0.12", features = ["json"] }
 reqwest-middleware = { version = "0", features = ["json"] }
 reqwest-retry = "0"
