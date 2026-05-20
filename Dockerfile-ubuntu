@@ -10,7 +10,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
   --mount=type=cache,target=/usr/src/app/target \
   cargo install --path .
 
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 COPY --from=builder /usr/local/cargo/bin/orgu /usr/local/bin/orgu
 
 ENTRYPOINT ["/usr/local/bin/orgu"]
